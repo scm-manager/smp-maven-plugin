@@ -54,6 +54,9 @@ import org.apache.maven.repository.RepositorySystem;
 
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 //~--- JDK imports ------------------------------------------------------------
 
 import java.io.File;
@@ -82,6 +85,12 @@ public class CompressWebAppResourcesMojo extends AbstractWebappMojo
   /** Field description */
   private static final String RESOURCE_PACKAGE_JSON =
     "sonia/scm/maven/package.json";
+
+  /**
+   * the logger for CompressWebAppResourcesMojo
+   */
+  private static final Logger logger =
+    LoggerFactory.getLogger(CompressWebAppResourcesMojo.class);
 
   //~--- set methods ----------------------------------------------------------
 
@@ -163,19 +172,26 @@ public class CompressWebAppResourcesMojo extends AbstractWebappMojo
   @Override
   protected void doExecute() throws MojoExecutionException, MojoFailureException
   {
-    copyAndFilterResource(RESOURCE_PACKAGE_JSON, FILE_PACKAGE_JSON);
+    if (!disableCompression)
+    {
+      copyAndFilterResource(RESOURCE_PACKAGE_JSON, FILE_PACKAGE_JSON);
 
-    NpmInstallMojo npm = new NpmInstallMojo();
+      NpmInstallMojo npm = new NpmInstallMojo();
 
-    setMojoDependencies(npm);
-    npm.execute();
+      setMojoDependencies(npm);
+      npm.execute();
 
-    copyAndFilterResource(RESOURCE_GULPFILE, FILE_GULPFILE);
+      copyAndFilterResource(RESOURCE_GULPFILE, FILE_GULPFILE);
 
-    GulpMojo gulp = new GulpMojo();
+      GulpMojo gulp = new GulpMojo();
 
-    setMojoDependencies(gulp);
-    gulp.execute();
+      setMojoDependencies(gulp);
+      gulp.execute();
+    }
+    else
+    {
+      logger.warn("compression is disabled");
+    }
   }
 
   /**
@@ -238,6 +254,10 @@ public class CompressWebAppResourcesMojo extends AbstractWebappMojo
   /** Field description */
   @Parameter(defaultValue = "${project.build.directory}/frontend")
   private String buildDirectory;
+
+  /** Field description */
+  @Parameter(defaultValue = "false")
+  private boolean disableCompression;
 
   /** Field description */
   @Component
