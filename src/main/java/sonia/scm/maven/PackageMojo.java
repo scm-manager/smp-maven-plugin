@@ -175,8 +175,16 @@ public class PackageMojo extends AbstractDescriptorMojo
 
       resolve(archiver, getRuntimeDependencies());
 
-      archiver.addClasses(classesDirectory, new String[0], new String[0]);
-      archiver.addDirectory(webappDirectory);
+      if (isDirectory(classesDirectory))
+      {
+        archiver.addClasses(classesDirectory, new String[0], new String[0]);
+      }
+
+      if (isDirectory(webappDirectory))
+      {
+        archiver.addDirectory(webappDirectory);
+      }
+
       archiver.addFile(descriptor, PLUGIN_DESCRIPTOR);
       archiver.setDestFile(outputPackage);
 
@@ -295,6 +303,19 @@ public class PackageMojo extends AbstractDescriptorMojo
         return !SCOPE_PROVIDED.equals(input.getScope());
       }
     });
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param dir
+   *
+   * @return
+   */
+  private boolean isDirectory(File dir)
+  {
+    return dir.exists() && dir.isDirectory();
   }
 
   //~--- fields ---------------------------------------------------------------
