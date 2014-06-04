@@ -114,7 +114,10 @@ public class CopyWebAppResourcesMojo extends AbstractWebappMojo
   {
     try
     {
-      copyDirectory(webappSourceDirectory, webappDirectory);
+      if (webappSourceDirectory.exists() && webappSourceDirectory.isDirectory())
+      {
+        copyDirectory(webappSourceDirectory, webappDirectory);
+      }
     }
     catch (IOException ex)
     {
