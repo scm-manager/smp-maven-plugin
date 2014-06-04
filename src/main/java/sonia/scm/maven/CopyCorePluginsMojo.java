@@ -33,6 +33,7 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import org.apache.maven.artifact.Artifact;
@@ -64,6 +65,9 @@ import java.io.IOException;
 )
 public class CopyCorePluginsMojo extends AbstractSmpMojo
 {
+
+  /** Field description */
+  private static final String FILE_PLUGININDEX = "plugin.idx";
 
   /** Field description */
   private static final String TYPE = "smp";
@@ -115,13 +119,34 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
       throw new MojoExecutionException("could not create output directory");
     }
 
+    StringBuilder plugins = new StringBuilder();
+
     for (Artifact artifact : project.getDependencyArtifacts())
     {
       if (TYPE.equals(artifact.getType()))
       {
         logger.info("copy core plugin {}", artifact.getId());
-        copy(artifact.getFile());
+
+        File file = artifact.getFile();
+
+        plugins.append(file.getName()).append('\n');
+        copy(file);
       }
+    }
+
+    try
+    {
+      //J-
+      Files.write(
+        plugins.toString(), 
+        new File(outputDirectory, FILE_PLUGININDEX),
+        Charsets.UTF_8
+      );
+      //J+
+    }
+    catch (IOException ex)
+    {
+      throw new MojoExecutionException("could not create plugin index", ex);
     }
   }
 
