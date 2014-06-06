@@ -37,14 +37,18 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DefaultArtifact;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.repository.RepositorySystem;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,15 +58,13 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.List;
+
 /**
  *
  * @author Sebastian Sdorra
  */
-@Mojo(
-  name = "copy-core-plugins",
-  defaultPhase = LifecyclePhase.COMPILE,
-  requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME
-)
+@Mojo(name = "copy-core-plugins", defaultPhase = LifecyclePhase.COMPILE)
 public class CopyCorePluginsMojo extends AbstractSmpMojo
 {
 
@@ -79,6 +81,17 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
     LoggerFactory.getLogger(CopyCorePluginsMojo.class);
 
   //~--- set methods ----------------------------------------------------------
+
+  /**
+   * Method description
+   *
+   *
+   * @param artifactItems
+   */
+  public void setArtifactItems(List<ArtifactItem> artifactItems)
+  {
+    this.artifactItems = artifactItems;
+  }
 
   /**
    * Method description
@@ -114,23 +127,26 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
   @Override
   protected void doExecute() throws MojoExecutionException, MojoFailureException
   {
-    if (!outputDirectory.mkdirs())
+    if (!outputDirectory.exists() &&!outputDirectory.mkdirs())
     {
       throw new MojoExecutionException("could not create output directory");
     }
 
     StringBuilder plugins = new StringBuilder();
 
-    for (Artifact artifact : project.getDependencyArtifacts())
+    for (ArtifactItem artifactItem : artifactItems)
     {
-      if (TYPE.equals(artifact.getType()))
+      File artifactFile = resolve(artifactItem);
+
+      if ((artifactFile != null) && artifactFile.exists())
       {
-        logger.info("copy core plugin {}", artifact.getId());
-
-        File file = artifact.getFile();
-
-        plugins.append(file.getName()).append('\n');
-        copy(file);
+        plugins.append(artifactFile.getName()).append('\n');
+        copy(artifactFile);
+      }
+      else
+      {
+        logger.warn("could not resolve file for {}",
+          artifactItem.getArtifactId());
       }
     }
 
@@ -154,6 +170,21 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
    * Method description
    *
    *
+   * @param artifactItem
+   *
+   * @return
+   */
+  private Artifact convert(ArtifactItem artifactItem)
+  {
+    return repositorySystem.createArtifact(artifactItem.getGroupId(),
+      artifactItem.getArtifactId(), artifactItem.getVersion(),
+      artifactItem.getType());
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param source
    *
    * @throws MojoExecutionException
@@ -170,16 +201,56 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
     }
   }
 
+  /**
+   * Method description
+   *
+   *
+   * @param artifactItem
+   *
+   * @return
+   */
+  private File resolve(ArtifactItem artifactItem)
+  {
+    Artifact artifact = convert(artifactItem);
+    ArtifactResolutionRequest request = new ArtifactResolutionRequest();
+
+    request.setArtifact(convert(artifactItem));
+    request.setRemoteRepositories(project.getRemoteArtifactRepositories());
+    request.setLocalRepository(localRepository);
+
+    repositorySystem.resolve(request);
+
+    File file = artifact.getFile();
+
+    if (file == null)
+    {
+      file = new File(localRepository.getBasedir(),
+        localRepository.pathOf(artifact));
+    }
+
+    return file;
+  }
+
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
-  @Parameter(
-    required = true,
-    defaultValue = "${project.build.directory}/${project.build.finalName}/WEB-INF/plugins"
-  )
+  @Parameter(required = true)
+  private List<ArtifactItem> artifactItems;
+
+  /** Field description */
+  @Parameter(defaultValue = "${localRepository}")
+  private ArtifactRepository localRepository;
+
+  /** Field description */
+  @Parameter(required = true,
+    defaultValue = "${project.build.directory}/${project.build.finalName}/WEB-INF/plugins")
   private File outputDirectory;
 
   /** Field description */
   @Component
   private MavenProject project;
+
+  /** Field description */
+  @Component
+  private RepositorySystem repositorySystem;
 }
