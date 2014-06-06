@@ -34,6 +34,7 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import org.apache.maven.model.Scm;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -78,6 +79,17 @@ public abstract class AbstractDescriptorMojo extends AbstractWebappMojo
     this.descriptorPath = descriptorPath;
   }
 
+  /**
+   * Method description
+   *
+   *
+   * @param outputDirectory
+   */
+  public void setOutputDirectory(File outputDirectory)
+  {
+    this.outputDirectory = outputDirectory;
+  }
+
   //~--- methods --------------------------------------------------------------
 
   /**
@@ -90,7 +102,7 @@ public abstract class AbstractDescriptorMojo extends AbstractWebappMojo
   @Override
   protected void doExecute() throws MojoExecutionException, MojoFailureException
   {
-    File descriptor = new File(webappDirectory, descriptorPath);
+    File descriptor = new File(outputDirectory, descriptorPath);
 
     doExecute(descriptor);
   }
@@ -100,4 +112,8 @@ public abstract class AbstractDescriptorMojo extends AbstractWebappMojo
   /** Field description */
   @Parameter(defaultValue = PLUGIN_DESCRIPTOR)
   protected String descriptorPath;
+
+  /** Field description */
+  @Parameter(defaultValue = "${project.build.outputDirectory}")
+  protected File outputDirectory;
 }
