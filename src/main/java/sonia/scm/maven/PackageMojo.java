@@ -35,6 +35,8 @@ package sonia.scm.maven;
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import org.apache.maven.archiver.MavenArchiveConfiguration;
@@ -65,6 +67,9 @@ import org.codehaus.plexus.archiver.war.WarArchiver;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Locale;
+import java.util.Set;
+
 /**
  *
  * @author Sebastian Sdorra
@@ -78,7 +83,8 @@ public class PackageMojo extends AbstractDescriptorMojo
 {
 
   /** Field description */
-  private static final String SCOPE_PROVIDED = "provided";
+  private static final Set<String> EXCLUDED_SCOPES =
+    ImmutableSet.of("provided", "test");
 
   //~--- set methods ----------------------------------------------------------
 
@@ -300,7 +306,11 @@ public class PackageMojo extends AbstractDescriptorMojo
       @Override
       public boolean apply(Artifact input)
       {
-        return !SCOPE_PROVIDED.equals(input.getScope());
+        //J-
+        return ! EXCLUDED_SCOPES.contains(
+          Strings.nullToEmpty(input.getScope()).toLowerCase(Locale.ENGLISH)
+        );
+        //J+
       }
     });
   }
