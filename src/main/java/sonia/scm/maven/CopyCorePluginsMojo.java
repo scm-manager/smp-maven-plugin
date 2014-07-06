@@ -37,10 +37,8 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -242,8 +240,10 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
   private ArtifactRepository localRepository;
 
   /** Field description */
-  @Parameter(required = true,
-    defaultValue = "${project.build.directory}/${project.build.finalName}/WEB-INF/plugins")
+  @Parameter(
+    required = true,
+    defaultValue = "${project.build.directory}/${project.build.finalName}/WEB-INF/plugins"
+  )
   private File outputDirectory;
 
   /** Field description */
