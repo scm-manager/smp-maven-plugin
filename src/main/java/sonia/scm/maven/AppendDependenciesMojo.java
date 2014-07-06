@@ -139,21 +139,12 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
         Thread.currentThread().setContextClassLoader(classLoader);
         appendDependencies(classLoader, descriptor);
       }
-      catch (ParserConfigurationException ex)
+      catch (ParserConfigurationException | SAXException ex)
       {
         throw new MojoExecutionException("could not parse plugin descriptor",
           ex);
       }
-      catch (SAXException ex)
-      {
-        throw new MojoExecutionException("could not parse plugin descriptor",
-          ex);
-      }
-      catch (DependencyResolutionRequiredException ex)
-      {
-        throw new MojoExecutionException("could not setup classloader", ex);
-      }
-      catch (IOException ex)
+      catch (DependencyResolutionRequiredException | IOException ex)
       {
         throw new MojoExecutionException("could not setup classloader", ex);
       }
@@ -204,7 +195,7 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
     throws IOException, ParserConfigurationException, SAXException,
     TransformerException
   {
-    Set<String> dependencies = new HashSet<String>();
+    Set<String> dependencies = new HashSet<>();
     Enumeration<URL> descriptors = classLoader.getResources(PLUGIN_DESCRIPTOR);
 
     while (descriptors.hasMoreElements())

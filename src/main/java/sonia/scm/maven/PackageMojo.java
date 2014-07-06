@@ -207,20 +207,11 @@ public class PackageMojo extends AbstractDescriptorMojo
     {
       throw new MojoExecutionException("unable to find war archiver", ex);
     }
-    catch (ArchiverException ex)
+    catch (ArchiverException | IOException ex)
     {
       throw new MojoExecutionException("could not create archive", ex);
     }
-    catch (IOException ex)
-    {
-      throw new MojoExecutionException("could not create archive", ex);
-    }
-    catch (ManifestException ex)
-    {
-      throw new MojoExecutionException(
-        "could not attach maven metadata to archive", ex);
-    }
-    catch (DependencyResolutionRequiredException ex)
+    catch (ManifestException | DependencyResolutionRequiredException ex)
     {
       throw new MojoExecutionException(
         "could not attach maven metadata to archive", ex);

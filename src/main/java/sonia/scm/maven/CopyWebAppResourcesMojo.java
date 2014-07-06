@@ -52,8 +52,10 @@ import java.io.IOException;
  * @author Sebastian Sdorra
  *
  */
-@Mojo(name = "copy-webapp-resources",
-  defaultPhase = LifecyclePhase.PROCESS_RESOURCES)
+@Mojo(
+  name = "copy-webapp-resources",
+  defaultPhase = LifecyclePhase.PROCESS_RESOURCES
+)
 public class CopyWebAppResourcesMojo extends AbstractWebappMojo
 {
 

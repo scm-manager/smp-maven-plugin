@@ -34,7 +34,6 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.apache.maven.model.Scm;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;

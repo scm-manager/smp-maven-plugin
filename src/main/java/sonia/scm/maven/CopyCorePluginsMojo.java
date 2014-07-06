@@ -69,9 +69,6 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
   /** Field description */
   private static final String FILE_PLUGININDEX = "plugin.idx";
 
-  /** Field description */
-  private static final String TYPE = "smp";
-
   /**
    * the logger for CopyCorePluginsMojo
    */
@@ -240,10 +237,8 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
   private ArtifactRepository localRepository;
 
   /** Field description */
-  @Parameter(
-    required = true,
-    defaultValue = "${project.build.directory}/${project.build.finalName}/WEB-INF/plugins"
-  )
+  @Parameter(required = true,
+    defaultValue = "${project.build.directory}/${project.build.finalName}/WEB-INF/plugins")
   private File outputDirectory;
 
   /** Field description */

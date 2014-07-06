@@ -34,6 +34,8 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.base.Strings;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -46,13 +48,18 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import org.xml.sax.SAXException;
+
 //~--- JDK imports ------------------------------------------------------------
 
 import java.io.File;
+import java.io.IOException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -147,9 +154,9 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
         DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
           descriptor);
     }
-    catch (Exception ex)
+    catch (IOException | ParserConfigurationException | SAXException ex)
     {
-      throw new MojoExecutionException("could not parse plugin descriptor");
+      throw new MojoExecutionException("could not parse plugin descriptor", ex);
     }
 
     return document;
@@ -213,33 +220,45 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
       Node node = children.item(i);
       String nodeName = node.getNodeName();
 
-      if ("groupId".equals(nodeName))
+      if (!Strings.isNullOrEmpty(nodeName))
       {
-        groupId = true;
-      }
-      else if ("artifactId".equals(nodeName))
-      {
-        artifactId = true;
-      }
-      else if ("version".equals(nodeName))
-      {
-        version = true;
-      }
-      else if ("name".equals(nodeName))
-      {
-        name = true;
-      }
-      else if ("url".equals(nodeName))
-      {
-        url = true;
-      }
-      else if ("description".equals(nodeName))
-      {
-        description = true;
-      }
-      else if ("author".equals(nodeName))
-      {
-        author = true;
+        switch (nodeName)
+        {
+          case "groupId" :
+            groupId = true;
+
+            break;
+
+          case "artifactId" :
+            artifactId = true;
+
+            break;
+
+          case "version" :
+            version = true;
+
+            break;
+
+          case "name" :
+            name = true;
+
+            break;
+
+          case "url" :
+            url = true;
+
+            break;
+
+          case "description" :
+            description = true;
+
+            break;
+
+          case "author" :
+            author = true;
+
+            break;
+        }
       }
     }
 
@@ -300,9 +319,9 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
       transformer.transform(new DOMSource(document),
         new StreamResult(descriptor));
     }
-    catch (Exception ex)
+    catch (IllegalArgumentException | TransformerException ex)
     {
-      throw new MojoExecutionException("could not write plugin descriptor");
+      throw new MojoExecutionException("could not write plugin descriptor", ex);
     }
   }
 
