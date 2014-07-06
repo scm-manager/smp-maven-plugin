@@ -33,7 +33,8 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
+import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 
 import org.apache.maven.artifact.Artifact;
@@ -58,6 +59,11 @@ import java.io.IOException;
 
 import java.util.List;
 
+import javax.xml.bind.JAXB;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  *
  * @author Sebastian Sdorra
@@ -67,7 +73,7 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
 {
 
   /** Field description */
-  private static final String FILE_PLUGININDEX = "plugin.idx";
+  private static final String FILE_PLUGININDEX = "plugin-index.xml";
 
   /**
    * the logger for CopyCorePluginsMojo
@@ -127,7 +133,7 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
       throw new MojoExecutionException("could not create output directory");
     }
 
-    StringBuilder plugins = new StringBuilder();
+    List<Plugin> plugins = Lists.newArrayList();
 
     for (ArtifactItem artifactItem : artifactItems)
     {
@@ -135,8 +141,9 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
 
       if ((artifactFile != null) && artifactFile.exists())
       {
-        plugins.append(artifactFile.getName()).append('\n');
         copy(artifactFile);
+        plugins.add(new Plugin(artifactFile.getName(),
+          createHash(artifactFile)));
       }
       else
       {
@@ -145,20 +152,12 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
       }
     }
 
-    try
-    {
-      //J-
-      Files.write(
-        plugins.toString(), 
-        new File(outputDirectory, FILE_PLUGININDEX),
-        Charsets.UTF_8
-      );
-      //J+
-    }
-    catch (IOException ex)
-    {
-      throw new MojoExecutionException("could not create plugin index", ex);
-    }
+    //J-
+    JAXB.marshal(
+      new PluginIndex(plugins),
+      new File(outputDirectory, FILE_PLUGININDEX)
+    );
+    //J+
   }
 
   /**
@@ -200,6 +199,32 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
    * Method description
    *
    *
+   * @param file
+   *
+   * @return
+   *
+   * @throws MojoExecutionException
+   */
+  private String createHash(File file) throws MojoExecutionException
+  {
+    String hash;
+
+    try
+    {
+      hash = Files.hash(file, Hashing.sha256()).toString();
+    }
+    catch (IOException ex)
+    {
+      throw new MojoExecutionException("could not create checksum", ex);
+    }
+
+    return hash;
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param artifactItem
    *
    * @return
@@ -225,6 +250,122 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
 
     return file;
   }
+
+  //~--- inner classes --------------------------------------------------------
+
+  /**
+   * Class description
+   *
+   *
+   * @version        Enter version here..., 14/07/06
+   * @author         Enter your name here...
+   */
+  @XmlRootElement(name = "plugin")
+  @XmlAccessorType(XmlAccessType.FIELD)
+  static class Plugin
+  {
+
+    /**
+     * Constructs ...
+     *
+     */
+    public Plugin() {}
+
+    /**
+     * Constructs ...
+     *
+     *
+     * @param name
+     * @param checksum
+     */
+    public Plugin(String name, String checksum)
+    {
+      this.name = name;
+      this.checksum = checksum;
+    }
+
+    //~--- get methods --------------------------------------------------------
+
+    /**
+     * Method description
+     *
+     *
+     * @return
+     */
+    public String getChecksum()
+    {
+      return checksum;
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @return
+     */
+    public String getName()
+    {
+      return name;
+    }
+
+    //~--- fields -------------------------------------------------------------
+
+    /** Field description */
+    private String checksum;
+
+    /** Field description */
+    private String name;
+  }
+
+
+  /**
+   * Class description
+   *
+   *
+   * @version        Enter version here..., 14/07/06
+   * @author         Enter your name here...
+   */
+  @XmlAccessorType(XmlAccessType.FIELD)
+  @XmlRootElement(name = "plugin-index")
+  static class PluginIndex
+  {
+
+    /**
+     * Constructs ...
+     *
+     */
+    public PluginIndex() {}
+
+    /**
+     * Constructs ...
+     *
+     *
+     * @param plugins
+     */
+    public PluginIndex(List<Plugin> plugins)
+    {
+      this.plugins = plugins;
+    }
+
+    //~--- get methods --------------------------------------------------------
+
+    /**
+     * Method description
+     *
+     *
+     * @return
+     */
+    public List<Plugin> getPlugins()
+    {
+      return plugins;
+    }
+
+    //~--- fields -------------------------------------------------------------
+
+    /** Field description */
+    private List<Plugin> plugins;
+  }
+
 
   //~--- fields ---------------------------------------------------------------
 
