@@ -44,6 +44,21 @@ public class ArtifactItem
    */
   public ArtifactItem() {}
 
+  /**
+   * Constructs ...
+   *
+   *
+   * @param groupId
+   * @param artifactId
+   * @param version
+   */
+  public ArtifactItem(String groupId, String artifactId, String version)
+  {
+    this.artifactId = artifactId;
+    this.groupId = groupId;
+    this.version = version;
+  }
+
   //~--- get methods ----------------------------------------------------------
 
   /**
@@ -66,6 +81,17 @@ public class ArtifactItem
   public String getGroupId()
   {
     return groupId;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   */
+  public String getId()
+  {
+    return groupId.concat(":").concat(artifactId);
   }
 
   /**

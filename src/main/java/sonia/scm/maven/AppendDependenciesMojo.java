@@ -34,9 +34,6 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import com.google.common.io.Closeables;
-
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -50,8 +47,6 @@ import org.slf4j.LoggerFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import org.xml.sax.SAXException;
 
@@ -59,12 +54,7 @@ import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 
-import java.net.URL;
-
-import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -91,19 +81,10 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
 {
 
   /** Field description */
-  private static final String ELEMENT_ARTIFACTID = "artifactId";
-
-  /** Field description */
   private static final String ELEMENT_DEPENDENCIES = "dependencies";
 
   /** Field description */
   private static final String ELEMENT_DEPENDENCY = "dependency";
-
-  /** Field description */
-  private static final String ELEMENT_GROUPID = "groupId";
-
-  /** Field description */
-  private static final String ELEMENT_INFORMATION = "information";
 
   /**
    * the logger for AppendDependenciesMojo
@@ -128,33 +109,25 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
   {
     if (descriptor.exists())
     {
-      ClassLoader oldClassLoader =
-        Thread.currentThread().getContextClassLoader();
+      Set<ArtifactItem> dependencies = SmpDependencyCollector.collect(project);
 
-      try
+      if (dependencies.isEmpty())
       {
-        ClassLoader classLoader =
-          ClassLoaders.createRuntimeClassLoader(project);
+        logger.info("no plugin dependencies found");
+      }
+      else
+      {
+        logger.info("update plugin descriptor");
 
-        Thread.currentThread().setContextClassLoader(classLoader);
-        appendDependencies(classLoader, descriptor);
-      }
-      catch (ParserConfigurationException | SAXException ex)
-      {
-        throw new MojoExecutionException("could not parse plugin descriptor",
-          ex);
-      }
-      catch (DependencyResolutionRequiredException | IOException ex)
-      {
-        throw new MojoExecutionException("could not setup classloader", ex);
-      }
-      catch (TransformerException ex)
-      {
-        throw new MojoExecutionException("could not write plugin.xml", ex);
-      }
-      finally
-      {
-        Thread.currentThread().setContextClassLoader(oldClassLoader);
+        try
+        {
+          rewritePluginDescriptor(descriptor, dependencies);
+        }
+        catch (SAXException | IOException | ParserConfigurationException
+          | TransformerException ex)
+        {
+          logger.error("could not rewrite plugin descriptor with dependencies");
+        }
       }
     }
     else
@@ -183,147 +156,6 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
    * Method description
    *
    *
-   * @param classLoader
-   * @param descriptor
-   *
-   * @throws IOException
-   * @throws ParserConfigurationException
-   * @throws SAXException
-   * @throws TransformerException
-   */
-  private void appendDependencies(ClassLoader classLoader, File descriptor)
-    throws IOException, ParserConfigurationException, SAXException,
-    TransformerException
-  {
-    Set<String> dependencies = new HashSet<>();
-    Enumeration<URL> descriptors = classLoader.getResources(PLUGIN_DESCRIPTOR);
-
-    while (descriptors.hasMoreElements())
-    {
-      URL url = descriptors.nextElement();
-
-      appendDependency(dependencies, url);
-    }
-
-    if (dependencies.isEmpty())
-    {
-      logger.info("no plugin dependencies found");
-    }
-    else
-    {
-      logger.info("update plugin descriptor");
-      rewritePluginDescriptor(descriptor, dependencies);
-    }
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param dependencies
-   * @param url
-   *
-   * @throws IOException
-   * @throws ParserConfigurationException
-   * @throws SAXException
-   */
-  private void appendDependency(Set<String> dependencies, URL url)
-    throws ParserConfigurationException, SAXException, IOException
-  {
-    DocumentBuilder builder =
-      DocumentBuilderFactory.newInstance().newDocumentBuilder();
-    InputStream is = null;
-
-    try
-    {
-      is = url.openStream();
-
-      Document doc = builder.parse(is);
-
-      String pluginid = parseDescriptor(doc);
-
-      if (!pluginid.equals(
-        project.getGroupId().concat(":").concat(project.getArtifactId())))
-      {
-        dependencies.add(pluginid);
-      }
-
-    }
-    finally
-    {
-      Closeables.close(is, true);
-    }
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param doc
-   *
-   * @return
-   */
-  private String parseDescriptor(Document doc)
-  {
-    String id = null;
-    NodeList nodeList = doc.getElementsByTagName(ELEMENT_INFORMATION);
-
-    for (int i = 0; i < nodeList.getLength(); i++)
-    {
-      Node node = nodeList.item(i);
-
-      if (isElement(node, ELEMENT_INFORMATION))
-      {
-        id = parseInformationNode(node);
-
-        break;
-      }
-    }
-
-    return id;
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param informationNode
-   *
-   * @return
-   */
-  private String parseInformationNode(Node informationNode)
-  {
-    String groupid = null;
-    String artifactid = null;
-    NodeList nodeList = informationNode.getChildNodes();
-
-    for (int i = 0; i < nodeList.getLength(); i++)
-    {
-      Node node = nodeList.item(i);
-
-      if (isElement(node, ELEMENT_GROUPID))
-      {
-        groupid = node.getTextContent();
-      }
-      else if (isElement(node, ELEMENT_ARTIFACTID))
-      {
-        artifactid = node.getTextContent();
-      }
-    }
-
-    if ((groupid == null) || (artifactid == null))
-    {
-      throw new RuntimeException(
-        "descriptor does not contain groupid or artifactid");
-    }
-
-    return groupid.concat(":").concat(artifactid);
-  }
-
-  /**
-   * Method description
-   *
-   *
    *
    * @param descriptor
    * @param dependencies
@@ -335,7 +167,7 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
    * @throws TransformerException
    */
   private void rewritePluginDescriptor(File descriptor,
-    Set<String> dependencies)
+    Set<ArtifactItem> dependencies)
     throws SAXException, IOException, ParserConfigurationException,
     TransformerConfigurationException, TransformerException
   {
@@ -346,11 +178,11 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
 
     doc.getDocumentElement().appendChild(dependenciesEl);
 
-    for (String pluginid : dependencies)
+    for (ArtifactItem item : dependencies)
     {
       Element dependencyEl = doc.createElement(ELEMENT_DEPENDENCY);
 
-      dependencyEl.setTextContent(pluginid);
+      dependencyEl.setTextContent(item.getId());
       dependenciesEl.appendChild(dependencyEl);
     }
 
@@ -358,23 +190,6 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
 
     transformer.setOutputProperty(OutputKeys.INDENT, "yes");
     transformer.transform(new DOMSource(doc), new StreamResult(descriptor));
-  }
-
-  //~--- get methods ----------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @param node
-   * @param name
-   *
-   * @return
-   */
-  private boolean isElement(Node node, String name)
-  {
-    return (node.getNodeType() == Node.ELEMENT_NODE)
-      && name.equals(node.getNodeName());
   }
 
   //~--- fields ---------------------------------------------------------------
