@@ -81,7 +81,7 @@ https://bitbucket.org/sdorra/smp-maven-plugin
       </implementation>
       <configuration>
         <extension>smp</extension>
-        <type>war</type>
+        <type>smp</type>
         <language>java</language>
         <packaging>smp</packaging>
         <addedToClasspath>true</addedToClasspath>

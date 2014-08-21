@@ -54,9 +54,11 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectHelper;
 
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.ArchiverException;
+import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.codehaus.plexus.archiver.jar.ManifestException;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
@@ -136,6 +138,17 @@ public class PackageMojo extends AbstractDescriptorMojo
    * Method description
    *
    *
+   * @param outputClassesPackage
+   */
+  public void setOutputClassesPackage(File outputClassesPackage)
+  {
+    this.outputClassesPackage = outputClassesPackage;
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param outputPackage
    */
   public void setOutputPackage(File outputPackage)
@@ -177,35 +190,12 @@ public class PackageMojo extends AbstractDescriptorMojo
 
     try
     {
-      WarArchiver archiver = createWarArchiver();
-
-      resolve(archiver, getRuntimeDependencies());
-
-      if (isDirectory(classesDirectory))
-      {
-        archiver.addClasses(classesDirectory, new String[0], new String[0]);
-      }
-
-      if (isDirectory(webappDirectory))
-      {
-        archiver.addDirectory(webappDirectory);
-      }
-
-      archiver.addFile(descriptor, PLUGIN_DESCRIPTOR);
-      archiver.setDestFile(outputPackage);
-
-      MavenArchiver mavenArchiver = new MavenArchiver();
-
-      mavenArchiver.setArchiver(archiver);
-      mavenArchiver.setOutputFile(outputPackage);
-      mavenArchiver.createArchive(project, new MavenArchiveConfiguration());
-
-      project.getArtifact().setFile(outputPackage);
-
+      packageWar(descriptor);
+      packageJar(descriptor);
     }
     catch (NoSuchArchiverException ex)
     {
-      throw new MojoExecutionException("unable to find war archiver", ex);
+      throw new MojoExecutionException("unable to find archiver", ex);
     }
     catch (ArchiverException | IOException ex)
     {
@@ -216,6 +206,28 @@ public class PackageMojo extends AbstractDescriptorMojo
       throw new MojoExecutionException(
         "could not attach maven metadata to archive", ex);
     }
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @return
+   *
+   * @throws MojoFailureException
+   * @throws NoSuchArchiverException
+   */
+  private JarArchiver createJarArchiver()
+    throws NoSuchArchiverException, MojoFailureException
+  {
+    Archiver archiver = archiverManager.getArchiver("jar");
+
+    if (!(archiver instanceof JarArchiver))
+    {
+      throw new MojoFailureException("archiver is not an instance JarArchiver");
+    }
+
+    return (JarArchiver) archiver;
   }
 
   /**
@@ -244,6 +256,82 @@ public class PackageMojo extends AbstractDescriptorMojo
     archiver.setIgnoreWebxml(false);
 
     return archiver;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @throws ArchiverException
+   * @throws DependencyResolutionRequiredException
+   * @throws IOException
+   * @throws ManifestException
+   * @throws MojoFailureException
+   * @throws NoSuchArchiverException
+   */
+  private void packageJar(File descriptor)
+    throws NoSuchArchiverException, MojoFailureException, ArchiverException,
+    ManifestException, IOException, DependencyResolutionRequiredException
+  {
+    JarArchiver archiver = createJarArchiver();
+
+    if (isDirectory(classesDirectory))
+    {
+      archiver.addDirectory(classesDirectory);
+    }
+    archiver.addFile(descriptor, PLUGIN_DESCRIPTOR);
+    archiver.setDestFile(outputClassesPackage);
+
+    MavenArchiver mavenArchiver = new MavenArchiver();
+
+    mavenArchiver.setArchiver(archiver);
+    mavenArchiver.setOutputFile(outputClassesPackage);
+    mavenArchiver.createArchive(project, new MavenArchiveConfiguration());
+
+    helper.attachArtifact(project, "jar", outputClassesPackage);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param descriptor
+   *
+   * @throws ArchiverException
+   * @throws DependencyResolutionRequiredException
+   * @throws IOException
+   * @throws ManifestException
+   * @throws MojoFailureException
+   * @throws NoSuchArchiverException
+   */
+  private void packageWar(File descriptor)
+    throws NoSuchArchiverException, MojoFailureException, ArchiverException,
+    ManifestException, IOException, DependencyResolutionRequiredException
+  {
+    WarArchiver archiver = createWarArchiver();
+
+    resolve(archiver, getRuntimeDependencies());
+
+    if (isDirectory(classesDirectory))
+    {
+      archiver.addClasses(classesDirectory, new String[0], new String[0]);
+    }
+
+    if (isDirectory(webappDirectory))
+    {
+      archiver.addDirectory(webappDirectory);
+    }
+
+    archiver.addFile(descriptor, PLUGIN_DESCRIPTOR);
+    archiver.setDestFile(outputPackage);
+
+    MavenArchiver mavenArchiver = new MavenArchiver();
+
+    mavenArchiver.setArchiver(archiver);
+    mavenArchiver.setOutputFile(outputPackage);
+    mavenArchiver.createArchive(project, new MavenArchiveConfiguration());
+
+    project.getArtifact().setFile(outputPackage);
   }
 
   /**
@@ -334,8 +422,17 @@ public class PackageMojo extends AbstractDescriptorMojo
   private File classesDirectory;
 
   /** Field description */
+  @Component
+  private MavenProjectHelper helper;
+
+  /** Field description */
   @Parameter(defaultValue = "${localRepository}")
   private ArtifactRepository localRepository;
+
+  /** Field description */
+  @Parameter(
+    defaultValue = "${project.build.directory}/${project.name}-${project.version}.jar")
+  private File outputClassesPackage;
 
   /** Field description */
   @Parameter(
