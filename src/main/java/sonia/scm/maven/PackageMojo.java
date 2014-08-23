@@ -34,11 +34,6 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.Artifact;
@@ -46,6 +41,9 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
+import org.apache.maven.artifact.resolver.filter.AndArtifactFilter;
+import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
+import org.apache.maven.artifact.resolver.filter.ScopeArtifactFilter;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -55,6 +53,11 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
+import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
+import org.apache.maven.shared.dependency.graph.DependencyNode;
+import org.apache.maven.shared.dependency.graph.traversal
+  .CollectingDependencyNodeVisitor;
 
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.ArchiverException;
@@ -64,12 +67,15 @@ import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.codehaus.plexus.archiver.war.WarArchiver;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 //~--- JDK imports ------------------------------------------------------------
 
 import java.io.File;
 import java.io.IOException;
 
-import java.util.Locale;
+import java.util.Arrays;
 import java.util.Set;
 
 /**
@@ -84,9 +90,11 @@ import java.util.Set;
 public class PackageMojo extends AbstractDescriptorMojo
 {
 
-  /** Field description */
-  private static final Set<String> EXCLUDED_SCOPES =
-    ImmutableSet.of("provided", "test");
+  /**
+   * the logger for PackageMojo
+   */
+  private static final Logger logger =
+    LoggerFactory.getLogger(PackageMojo.class);
 
   //~--- set methods ----------------------------------------------------------
 
@@ -121,6 +129,28 @@ public class PackageMojo extends AbstractDescriptorMojo
   public void setClassesDirectory(File classesDirectory)
   {
     this.classesDirectory = classesDirectory;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param graphBuilder
+   */
+  public void setGraphBuilder(DependencyGraphBuilder graphBuilder)
+  {
+    this.graphBuilder = graphBuilder;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param helper
+   */
+  public void setHelper(MavenProjectHelper helper)
+  {
+    this.helper = helper;
   }
 
   /**
@@ -193,6 +223,10 @@ public class PackageMojo extends AbstractDescriptorMojo
       packageWar(descriptor);
       packageJar(descriptor);
     }
+    catch (DependencyGraphBuilderException ex)
+    {
+      throw new MojoExecutionException("could not build dependency graph", ex);
+    }
     catch (NoSuchArchiverException ex)
     {
       throw new MojoExecutionException("unable to find archiver", ex);
@@ -262,6 +296,8 @@ public class PackageMojo extends AbstractDescriptorMojo
    * Method description
    *
    *
+   *
+   * @param descriptor
    * @throws ArchiverException
    * @throws DependencyResolutionRequiredException
    * @throws IOException
@@ -279,6 +315,7 @@ public class PackageMojo extends AbstractDescriptorMojo
     {
       archiver.addDirectory(classesDirectory);
     }
+
     archiver.addFile(descriptor, PLUGIN_DESCRIPTOR);
     archiver.setDestFile(outputClassesPackage);
 
@@ -298,19 +335,22 @@ public class PackageMojo extends AbstractDescriptorMojo
    * @param descriptor
    *
    * @throws ArchiverException
+   * @throws DependencyGraphBuilderException
    * @throws DependencyResolutionRequiredException
    * @throws IOException
    * @throws ManifestException
+   * @throws MojoExecutionException
    * @throws MojoFailureException
    * @throws NoSuchArchiverException
    */
   private void packageWar(File descriptor)
     throws NoSuchArchiverException, MojoFailureException, ArchiverException,
-    ManifestException, IOException, DependencyResolutionRequiredException
+    ManifestException, IOException, DependencyResolutionRequiredException,
+    MojoExecutionException, DependencyGraphBuilderException
   {
     WarArchiver archiver = createWarArchiver();
 
-    resolve(archiver, getRuntimeDependencies());
+    resolve(archiver);
 
     if (isDirectory(classesDirectory))
     {
@@ -339,13 +379,39 @@ public class PackageMojo extends AbstractDescriptorMojo
    *
    *
    * @param archiver
-   * @param artifacts
+   *
+   * @throws DependencyGraphBuilderException
+   * @throws MojoExecutionException
    */
-  private void resolve(WarArchiver archiver, Iterable<Artifact> artifacts)
+  private void resolve(WarArchiver archiver)
+    throws DependencyGraphBuilderException, MojoExecutionException
   {
-    for (Artifact artifact : artifacts)
+    Set<ArtifactItem> items = SmpDependencyCollector.collect(project);
+
+    //J-
+    ArtifactFilter filter = new AndArtifactFilter(
+      Arrays.asList(
+        new ScopeArtifactFilter(Artifact.SCOPE_RUNTIME), 
+        new SmpArtifactFilter(items)
+      )
+    );
+    //J+
+
+    CollectingDependencyNodeVisitor visitor =
+      new CollectingDependencyNodeVisitor();
+    DependencyNode rootNode = graphBuilder.buildDependencyGraph(project,
+                                filter);
+
+    rootNode.accept(visitor);
+
+    for (DependencyNode node : visitor.getNodes())
     {
-      resolve(archiver, artifact);
+      Artifact artifact = node.getArtifact();
+
+      if ("jar".equals(artifact.getType()))
+      {
+        resolve(archiver, node.getArtifact());
+      }
     }
   }
 
@@ -358,6 +424,9 @@ public class PackageMojo extends AbstractDescriptorMojo
    */
   private void resolve(WarArchiver archiver, Artifact artifact)
   {
+    logger.debug("resolve artifact {}:{}", artifact.getGroupId(),
+      artifact.getArtifactId());
+
     ArtifactResolutionRequest request = new ArtifactResolutionRequest();
 
     request.setArtifact(artifact);
@@ -365,34 +434,11 @@ public class PackageMojo extends AbstractDescriptorMojo
     request.setLocalRepository(localRepository);
 
     artifactResolver.resolve(request);
-
+    logger.trace("attach artifact file {}", artifact.getFile());
     archiver.addLib(artifact.getFile());
   }
 
   //~--- get methods ----------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @return
-   */
-  private Iterable<Artifact> getRuntimeDependencies()
-  {
-    return Iterables.filter(project.getArtifacts(), new Predicate<Artifact>()
-    {
-
-      @Override
-      public boolean apply(Artifact input)
-      {
-        //J-
-        return ! EXCLUDED_SCOPES.contains(
-          Strings.nullToEmpty(input.getScope()).toLowerCase(Locale.ENGLISH)
-        );
-        //J+
-      }
-    });
-  }
 
   /**
    * Method description
@@ -407,6 +453,65 @@ public class PackageMojo extends AbstractDescriptorMojo
     return dir.exists() && dir.isDirectory();
   }
 
+  //~--- inner classes --------------------------------------------------------
+
+  /**
+   * Class description
+   *
+   *
+   * @version        Enter version here..., 14/08/21
+   * @author         Enter your name here...
+   */
+  private static class SmpArtifactFilter implements ArtifactFilter
+  {
+
+    /**
+     * Constructs ...
+     *
+     *
+     * @param items
+     */
+    public SmpArtifactFilter(Set<ArtifactItem> items)
+    {
+      this.items = items;
+    }
+
+    //~--- methods ------------------------------------------------------------
+
+    /**
+     * Method description
+     *
+     *
+     * @param artifact
+     *
+     * @return
+     */
+    @Override
+    public boolean include(Artifact artifact)
+    {
+      boolean result = true;
+
+      for (ArtifactItem item : items)
+      {
+        if (artifact.getGroupId().equals(item.getGroupId())
+          && artifact.getArtifactId().equals(item.getArtifactId()))
+        {
+          result = false;
+
+          break;
+        }
+      }
+
+      return result;
+    }
+
+    //~--- fields -------------------------------------------------------------
+
+    /** Field description */
+    private final Set<ArtifactItem> items;
+  }
+
+
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
@@ -420,6 +525,10 @@ public class PackageMojo extends AbstractDescriptorMojo
   /** Field description */
   @Parameter(defaultValue = "${project.build.outputDirectory}")
   private File classesDirectory;
+
+  /** Field description */
+  @Component
+  private DependencyGraphBuilder graphBuilder;
 
   /** Field description */
   @Component
