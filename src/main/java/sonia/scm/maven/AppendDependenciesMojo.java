@@ -126,7 +126,8 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
         catch (SAXException | IOException | ParserConfigurationException
           | TransformerException ex)
         {
-          logger.error("could not rewrite plugin descriptor with dependencies");
+          logger.error("could not rewrite plugin descriptor with dependencies",
+            ex);
         }
       }
     }
@@ -180,10 +181,14 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
 
     for (ArtifactItem item : dependencies)
     {
-      Element dependencyEl = doc.createElement(ELEMENT_DEPENDENCY);
+      if (!(project.getGroupId().equals(item.getGroupId())
+        && project.getArtifactId().equals(item.getArtifactId())))
+      {
+        Element dependencyEl = doc.createElement(ELEMENT_DEPENDENCY);
 
-      dependencyEl.setTextContent(item.getId());
-      dependenciesEl.appendChild(dependencyEl);
+        dependencyEl.setTextContent(item.getId());
+        dependenciesEl.appendChild(dependencyEl);
+      }
     }
 
     Transformer transformer = TransformerFactory.newInstance().newTransformer();
