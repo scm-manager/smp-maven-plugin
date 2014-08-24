@@ -334,12 +334,14 @@ public class RunMojo extends AbstractPackagingMojo
       webApplication.setVersion(version);
     }
 
-    Artifact artifact = system.createArtifact(webApplication.getGroupId(),
-                          webApplication.getArtifactId(),
-                          webApplication.getVersion(), "",
-                          webApplication.getType());
+    Artifact artifact = convertToArtifact(webApplication);
+    File warFile = artifact.getFile();
 
-    File warFile = resolve(artifact);
+    if (!warFile.exists())
+    {
+      logger.debug("webapp is not resolved");
+      warFile = resolve(artifact);
+    }
 
     if ((warFile == null) ||!warFile.exists())
     {
@@ -395,8 +397,4 @@ public class RunMojo extends AbstractPackagingMojo
   /** Field description */
   @Parameter
   private final WebApplication webApplication = new WebApplication();
-
-  /** Field description */
-  @Component
-  private RepositorySystem system;
 }

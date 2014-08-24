@@ -46,6 +46,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.repository.RepositorySystem;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
@@ -145,7 +146,32 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
     this.project = project;
   }
 
+  /**
+   * Method description
+   *
+   *
+   * @param system
+   */
+  public void setSystem(RepositorySystem system)
+  {
+    this.system = system;
+  }
+
   //~--- methods --------------------------------------------------------------
+
+  /**
+   * Method description
+   *
+   *
+   * @param item
+   *
+   * @return
+   */
+  protected Artifact convertToArtifact(ArtifactItem item)
+  {
+    return system.createArtifact(item.getGroupId(), item.getArtifactId(),
+      item.getVersion(), "", item.getType());
+  }
 
   /**
    * Method description
@@ -471,4 +497,8 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
   /** Field description */
   @Component
   protected MavenProject project;
+
+  /** Field description */
+  @Component
+  private RepositorySystem system;
 }
