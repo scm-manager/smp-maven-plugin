@@ -22,7 +22,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.repository.RepositorySystem;
+
+import org.codehaus.plexus.archiver.UnArchiver;
 
 import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -184,7 +185,11 @@ public class RunMojo extends AbstractPackagingMojo
     throws MojoExecutionException, MojoFailureException
   {
     File pluginDirectory = new File(scmHome, DIRECTORY_PLUGINS);
-    File exploded = new File(pluginDirectory, createPluginPath());
+    File exploded = new File(pluginDirectory,
+                      createPluginPath(project.getArtifact()));
+
+    // TODO check for version updates
+    // TODO transitive smp dependencies
     Set<ArtifactItem> smps = SmpDependencyCollector.collect(project);
 
     for (ArtifactItem smp : smps)
@@ -210,17 +215,46 @@ public class RunMojo extends AbstractPackagingMojo
   /**
    * Method description
    *
-   *
+   * @param artifact
    * @return
    */
-  private String createPluginPath()
+  private String createPluginPath(Artifact artifact)
   {
     StringBuilder path = new StringBuilder();
 
-    path.append(File.separator).append(project.getGroupId());
-    path.append(File.separator).append(project.getArtifactId());
+    path.append(File.separator).append(artifact.getGroupId());
+    path.append(File.separator).append(artifact.getArtifactId());
 
     return path.toString();
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param directory
+   * @param archive
+   *
+   * @throws MojoExecutionException
+   */
+  private void extractSmp(File directory, File archive)
+    throws MojoExecutionException
+  {
+    logger.info("extract smp dependency {} to {}", archive, directory);
+
+    try
+    {
+      mkdirs(directory);
+    }
+    catch (IOException ex)
+    {
+      throw new MojoExecutionException(
+        "could not create plugin directory ".concat(directory.getPath()), ex);
+    }
+
+    unArchiver.setSourceFile(archive);
+    unArchiver.setDestDirectory(directory);
+    unArchiver.extract();
   }
 
   /**
@@ -237,8 +271,23 @@ public class RunMojo extends AbstractPackagingMojo
   {
     if (!smp.isSelf(project))
     {
-      throw new MojoExecutionException(
-        "smp dependency installation is not yet implement");
+      Artifact artifact = convertToArtifact(smp);
+      File directory = new File(pluginDirectory, createPluginPath(artifact));
+
+      if (!directory.exists())
+      {
+        logger.info("install smp dependency {}", artifact.getId());
+
+        File archive = checkAndResolve(artifact);
+
+        extractSmp(new File(pluginDirectory, createPluginPath(artifact)),
+          archive);
+      }
+      else
+      {
+        logger.info("smp dependency {}, is already installed",
+          artifact.getId());
+      }
     }
   }
 
@@ -334,19 +383,7 @@ public class RunMojo extends AbstractPackagingMojo
       webApplication.setVersion(version);
     }
 
-    Artifact artifact = convertToArtifact(webApplication);
-    File warFile = artifact.getFile();
-
-    if (!warFile.exists())
-    {
-      logger.debug("webapp is not resolved");
-      warFile = resolve(artifact);
-    }
-
-    if ((warFile == null) ||!warFile.exists())
-    {
-      throw new MojoExecutionException("could not find webapp artifact file");
-    }
+    File warFile = checkAndResolve(convertToArtifact(webApplication));
 
     return warFile;
   }
@@ -397,4 +434,8 @@ public class RunMojo extends AbstractPackagingMojo
   /** Field description */
   @Parameter
   private final WebApplication webApplication = new WebApplication();
+
+  /** Field description */
+  @Component(role = UnArchiver.class, hint = PACKAGE_JAR)
+  private UnArchiver unArchiver;
 }

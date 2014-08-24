@@ -163,6 +163,36 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
    * Method description
    *
    *
+   * @param artifact
+   *
+   * @return
+   *
+   * @throws MojoExecutionException
+   */
+  protected File checkAndResolve(Artifact artifact)
+    throws MojoExecutionException
+  {
+    File file = artifact.getFile();
+
+    if ((file == null) ||!file.exists())
+    {
+      logger.debug("start resolving artifact {}", artifact.getId());
+      file = resolve(artifact);
+    }
+
+    if ((file == null) ||!file.exists())
+    {
+      throw new MojoExecutionException(
+        "could not resolve artifact ".concat(artifact.getId()));
+    }
+
+    return file;
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param item
    *
    * @return

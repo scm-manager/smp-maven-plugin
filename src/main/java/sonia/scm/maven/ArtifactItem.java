@@ -55,12 +55,15 @@ public class ArtifactItem
    * @param groupId
    * @param artifactId
    * @param version
+   * @param type
    */
-  public ArtifactItem(String groupId, String artifactId, String version)
+  public ArtifactItem(String groupId, String artifactId, String version,
+    String type)
   {
     this.artifactId = artifactId;
     this.groupId = groupId;
     this.version = version;
+    this.type = type;
   }
 
   //~--- get methods ----------------------------------------------------------

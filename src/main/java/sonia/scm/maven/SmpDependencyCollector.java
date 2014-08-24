@@ -83,6 +83,9 @@ public final class SmpDependencyCollector
   /** Field description */
   private static final String ELEMENT_VERSION = "version";
 
+  /** Field description */
+  private static final String TYPE = "smp";
+
   //~--- constructors ---------------------------------------------------------
 
   /**
@@ -270,7 +273,7 @@ public final class SmpDependencyCollector
         "descriptor does not contain groupid or artifactid");
     }
 
-    return new ArtifactItem(groupid, artifactid, version);
+    return new ArtifactItem(groupid, artifactid, version, TYPE);
   }
 
   //~--- get methods ----------------------------------------------------------

@@ -38,13 +38,23 @@ package sonia.scm.maven;
 public class WebApplication extends ArtifactItem
 {
 
+  /** Field description */
+  private static final String ARTIFACTID = "scm-webapp";
+
+  /** Field description */
+  private static final String GROUPID = "sonia.scm";
+
+  /** Field description */
+  private static final String TYPE = "war";
+
+  //~--- constructors ---------------------------------------------------------
+
   /**
    * Constructs ...
    *
    */
   public WebApplication()
   {
-    super("sonia.scm", "scm-webapp", null);
-    setType("war");
+    super(GROUPID, ARTIFACTID, null, TYPE);
   }
 }
