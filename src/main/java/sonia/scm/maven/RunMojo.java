@@ -51,7 +51,7 @@ import java.util.Set;
  */
 @Mojo(
   name = "run",
-  defaultPhase = LifecyclePhase.PACKAGE,
+  defaultPhase = LifecyclePhase.COMPILE,
   requiresDependencyResolution = ResolutionScope.RUNTIME
 )
 public class RunMojo extends AbstractPackagingMojo
