@@ -88,7 +88,102 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
   private static final Logger logger =
     LoggerFactory.getLogger(AbstractPackagingMojo.class);
 
+  //~--- set methods ----------------------------------------------------------
+
+  /**
+   * Method description
+   *
+   *
+   * @param artifactResolver
+   */
+  public void setArtifactResolver(ArtifactResolver artifactResolver)
+  {
+    this.artifactResolver = artifactResolver;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param classesDirectory
+   */
+  public void setClassesDirectory(File classesDirectory)
+  {
+    this.classesDirectory = classesDirectory;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param graphBuilder
+   */
+  public void setGraphBuilder(DependencyGraphBuilder graphBuilder)
+  {
+    this.graphBuilder = graphBuilder;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param localRepository
+   */
+  public void setLocalRepository(ArtifactRepository localRepository)
+  {
+    this.localRepository = localRepository;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param project
+   */
+  public void setProject(MavenProject project)
+  {
+    this.project = project;
+  }
+
   //~--- methods --------------------------------------------------------------
+
+  /**
+   * Method description
+   *
+   *
+   * @param source
+   * @param target
+   *
+   * @throws IOException
+   */
+  protected void copy(File source, File target) throws IOException
+  {
+    if (source.isDirectory())
+    {
+      mkdirs(target);
+
+      String[] children = source.list();
+
+      for (String child : children)
+      {
+        copy(new File(source, child), new File(target, child));
+      }
+    }
+    else if (target.exists()
+      && (source.lastModified() == target.lastModified()))
+    {
+      logger.trace("source {} has not changed we do not need to copy it",
+        source);
+    }
+    else
+    {
+      Files.createParentDirs(target);
+      Files.copy(source, target);
+
+      // preserve last modified date
+      target.setLastModified(source.lastModified());
+    }
+  }
 
   /**
    * Method description
@@ -107,6 +202,8 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
     Set<ArtifactItem> smpDeps)
     throws IOException, MojoExecutionException
   {
+    logger.info("create exploded smp at {}", target);
+
     if (!descriptor.exists())
     {
       throw new IOException("could not find descriptor");
@@ -136,6 +233,48 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
     copyDependencies(new File(target, DIRECTORY_LIB), smpDeps);
   }
 
+  /**
+   * Method description
+   *
+   *
+   * @param file
+   *
+   * @throws IOException
+   */
+  protected void mkdirs(File file) throws IOException
+  {
+    if (!file.exists() &&!file.mkdirs())
+    {
+      throw new IOException(
+        "could not create directory ".concat(file.getPath()));
+    }
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param artifact
+   *
+   * @return
+   */
+  protected File resolve(Artifact artifact)
+  {
+    ArtifactResolutionRequest request = new ArtifactResolutionRequest();
+
+    request.setArtifact(artifact);
+    request.setRemoteRepositories(project.getRemoteArtifactRepositories());
+    request.setLocalRepository(localRepository);
+
+    artifactResolver.resolve(request);
+
+    File file = artifact.getFile();
+
+    logger.trace("resolved artifact {} to file {}", artifact.getId(), file);
+
+    return file;
+  }
+
   //~--- get methods ----------------------------------------------------------
 
   /**
@@ -152,44 +291,6 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
   }
 
   //~--- methods --------------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @param source
-   * @param target
-   *
-   * @throws IOException
-   */
-  private void copy(File source, File target) throws IOException
-  {
-    if (source.isDirectory())
-    {
-      mkdirs(target);
-
-      String[] children = source.list();
-
-      for (String child : children)
-      {
-        copy(new File(source, child), new File(target, child));
-      }
-    }
-    else if (target.exists()
-      && (source.lastModified() == target.lastModified()))
-    {
-      logger.trace("source {} has not changed we do not need to copy it",
-        source);
-    }
-    else
-    {
-      Files.createParentDirs(target);
-      Files.copy(source, target);
-
-      // preserve last modified date
-      target.setLastModified(source.lastModified());
-    }
-  }
 
   /**
    * Method description
@@ -243,48 +344,6 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
     }
 
     copy(file, new File(libDirectory, file.getName()));
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param file
-   *
-   * @throws IOException
-   */
-  private void mkdirs(File file) throws IOException
-  {
-    if (!file.exists() &&!file.mkdirs())
-    {
-      throw new IOException(
-        "could not create directory ".concat(file.getPath()));
-    }
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param artifact
-   *
-   * @return
-   */
-  private File resolve(Artifact artifact)
-  {
-    ArtifactResolutionRequest request = new ArtifactResolutionRequest();
-
-    request.setArtifact(artifact);
-    request.setRemoteRepositories(project.getRemoteArtifactRepositories());
-    request.setLocalRepository(localRepository);
-
-    artifactResolver.resolve(request);
-
-    File file = artifact.getFile();
-
-    logger.trace("resolved artifact {} to file {}", artifact.getId(), file);
-
-    return file;
   }
 
   //~--- get methods ----------------------------------------------------------

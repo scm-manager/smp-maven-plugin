@@ -181,8 +181,7 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
 
     for (ArtifactItem item : dependencies)
     {
-      if (!(project.getGroupId().equals(item.getGroupId())
-        && project.getArtifactId().equals(item.getArtifactId())))
+      if (!item.isSelf(project))
       {
         Element dependencyEl = doc.createElement(ELEMENT_DEPENDENCY);
 

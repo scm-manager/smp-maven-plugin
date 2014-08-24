@@ -45,26 +45,26 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
-      <version>3.1.0</version>
+      <version>${maven.version}</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
-      <version>3.1.0</version>
+      <version>${maven.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-artifact</artifactId>
-      <version>3.1.0</version>
+      <version>${maven.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-compat</artifactId>
-      <version>3.1.0</version>
+      <version>${maven.version}</version>
     </dependency>
 
     <dependency>
@@ -113,6 +113,20 @@
       <groupId>com.github.sdorra</groupId>
       <artifactId>buildfrontend-maven-plugin</artifactId>
       <version>1.0.2</version>
+    </dependency>
+    
+    <!-- jetty -->
+    
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-webapp</artifactId>
+      <version>${jetty.version}</version>
     </dependency>
 
   </dependencies>
@@ -256,5 +270,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
+    
+    <maven.version>3.1.0</maven.version>
+    <jetty.version>9.2.2.v20140723</jetty.version>
   </properties>
 </project>

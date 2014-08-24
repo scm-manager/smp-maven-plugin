@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010, Sebastian Sdorra All rights reserved.
+ * Copyright (c) 2014, Sebastian Sdorra All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,35 +33,36 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.apache.maven.project.MavenProject;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+//~--- JDK imports ------------------------------------------------------------
+
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import java.net.InetAddress;
+import java.net.Socket;
 
 /**
  *
  * @author Sebastian Sdorra
  */
-public class ArtifactItem
+@Mojo(name = "stop")
+public class StopMojo extends AbstractSmpMojo
 {
 
-  /**
-   * Constructs ...
-   *
-   */
-  public ArtifactItem() {}
+  /** Field description */
+  public static final String ADDRESS_LOCALHOST = "127.0.0.1";
 
   /**
-   * Constructs ...
-   *
-   *
-   * @param groupId
-   * @param artifactId
-   * @param version
+   * the logger for StopMojo
    */
-  public ArtifactItem(String groupId, String artifactId, String version)
-  {
-    this.artifactId = artifactId;
-    this.groupId = groupId;
-    this.version = version;
-  }
+  private static final Logger logger = LoggerFactory.getLogger(StopMojo.class);
 
   //~--- get methods ----------------------------------------------------------
 
@@ -71,9 +72,9 @@ public class ArtifactItem
    *
    * @return
    */
-  public String getArtifactId()
+  public String getStopKey()
   {
-    return artifactId;
+    return stopKey;
   }
 
   /**
@@ -82,56 +83,9 @@ public class ArtifactItem
    *
    * @return
    */
-  public String getGroupId()
+  public int getStopPort()
   {
-    return groupId;
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @return
-   */
-  public String getId()
-  {
-    return groupId.concat(":").concat(artifactId);
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @return
-   */
-  public String getType()
-  {
-    return type;
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @return
-   */
-  public String getVersion()
-  {
-    return version;
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param project
-   *
-   * @return
-   */
-  public boolean isSelf(MavenProject project)
-  {
-    return project.getGroupId().equals(groupId)
-      && project.getArtifactId().equals(artifactId);
+    return stopPort;
   }
 
   //~--- set methods ----------------------------------------------------------
@@ -140,57 +94,90 @@ public class ArtifactItem
    * Method description
    *
    *
-   * @param artifactId
+   * @param stopKey
    */
-  public void setArtifactId(String artifactId)
+  public void setStopKey(String stopKey)
   {
-    this.artifactId = artifactId;
+    this.stopKey = stopKey;
   }
 
   /**
    * Method description
    *
    *
-   * @param groupId
+   * @param stopPort
    */
-  public void setGroupId(String groupId)
+  public void setStopPort(int stopPort)
   {
-    this.groupId = groupId;
+    this.stopPort = stopPort;
+  }
+
+  //~--- methods --------------------------------------------------------------
+
+  /**
+   * Method description
+   *
+   *
+   * @throws MojoExecutionException
+   * @throws MojoFailureException
+   */
+  @Override
+  protected void doExecute() throws MojoExecutionException, MojoFailureException
+  {
+    try (Socket socket = createSocket();
+      PrintWriter writer = createWriter(socket))
+    {
+      writer.println(stopKey);
+      writer.flush();
+    }
+    catch (IOException ex)
+    {
+      logger.warn("could not stop jetty. Perhaps not running?");
+
+      if (logger.isTraceEnabled())
+      {
+        logger.trace("could not stop jetty", ex);
+      }
+    }
   }
 
   /**
    * Method description
    *
    *
-   * @param type
+   * @return
+   *
+   * @throws IOException
    */
-  public void setType(String type)
+  private Socket createSocket() throws IOException
   {
-    this.type = type;
+    return new Socket(InetAddress.getByName(ADDRESS_LOCALHOST), stopPort);
   }
 
   /**
    * Method description
    *
    *
-   * @param version
+   * @param socket
+   *
+   * @return
+   *
+   * @throws IOException
    */
-  public void setVersion(String version)
+  private PrintWriter createWriter(Socket socket) throws IOException
   {
-    this.version = version;
+    return new PrintWriter(socket.getOutputStream());
   }
 
   //~--- fields ---------------------------------------------------------------
 
-  /** Field description */
-  private String artifactId;
+  /**
+   * @parameter
+   */
+  private String stopKey = "stop";
 
-  /** Field description */
-  private String groupId;
-
-  /** Field description */
-  private String type;
-
-  /** Field description */
-  private String version;
+  /**
+   * @parameter
+   */
+  private int stopPort = 8085;
 }
