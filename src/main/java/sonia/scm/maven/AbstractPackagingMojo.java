@@ -76,13 +76,13 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
   protected static final String PACKAGE_JAR = "jar";
 
   /** Field description */
-  private static final String DIRECTORY_CLASSES = "classes";
+  protected static final String DIRECTORY_CLASSES = "classes";
 
   /** Field description */
-  private static final String DIRECTORY_LIB = "lib";
+  protected static final String DIRECTORY_LIB = "lib";
 
   /** Field description */
-  private static final String DIRECTORY_WEBAPP = "webapp";
+  protected static final String DIRECTORY_WEBAPP = "webapp";
 
   /**
    * the logger for Packaging
@@ -246,6 +246,57 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
    * Method description
    *
    *
+   * @param libDirectory
+   * @param items
+   *
+   * @throws MojoExecutionException
+   */
+  protected void copyDependencies(File libDirectory, Set<ArtifactItem> items)
+    throws MojoExecutionException
+  {
+    for (DependencyNode node : getDependencies(items))
+    {
+      Artifact artifact = node.getArtifact();
+
+      if (PACKAGE_JAR.equals(artifact.getType()))
+      {
+        try
+        {
+          copyDependency(libDirectory, node.getArtifact());
+        }
+        catch (IOException ex)
+        {
+          throw new MojoExecutionException(
+            "failed to copy dependency ".concat(artifact.getId()));
+        }
+      }
+    }
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param target
+   * @param descriptor
+   *
+   * @throws IOException
+   */
+  protected void copyDescriptor(File target, File descriptor) throws IOException
+  {
+    if (!descriptor.exists())
+    {
+      throw new IOException("could not find descriptor");
+    }
+
+    Files.createParentDirs(target);
+    copy(descriptor, new File(target, PLUGIN_DESCRIPTOR));
+  }
+
+  /**
+   * Method description
+   *
+   *
    *
    * @param descriptor
    * @param target
@@ -261,13 +312,7 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
   {
     logger.info("create exploded smp at {}", target);
 
-    if (!descriptor.exists())
-    {
-      throw new IOException("could not find descriptor");
-    }
-
-    Files.createParentDirs(target);
-    copy(descriptor, new File(target, PLUGIN_DESCRIPTOR));
+    copyDescriptor(target, descriptor);
 
     if (isDirectory(webappDirectory))
     {
@@ -348,37 +393,6 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
   }
 
   //~--- methods --------------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @param libDirectory
-   * @param items
-   *
-   * @throws MojoExecutionException
-   */
-  private void copyDependencies(File libDirectory, Set<ArtifactItem> items)
-    throws MojoExecutionException
-  {
-    for (DependencyNode node : getDependencies(items))
-    {
-      Artifact artifact = node.getArtifact();
-
-      if (PACKAGE_JAR.equals(artifact.getType()))
-      {
-        try
-        {
-          copyDependency(libDirectory, node.getArtifact());
-        }
-        catch (IOException ex)
-        {
-          throw new MojoExecutionException(
-            "failed to copy dependency ".concat(artifact.getId()));
-        }
-      }
-    }
-  }
 
   /**
    * Method description

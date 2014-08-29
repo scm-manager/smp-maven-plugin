@@ -13,6 +13,7 @@ package sonia.scm.maven;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -41,6 +42,10 @@ import java.awt.Desktop;
 
 import java.io.File;
 import java.io.IOException;
+
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 
 import java.util.List;
 import java.util.Set;
@@ -90,6 +95,17 @@ public class RunMojo extends AbstractPackagingMojo
   public void setContextPath(String contextPath)
   {
     this.contextPath = contextPath;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param link
+   */
+  public void setLink(boolean link)
+  {
+    this.link = link;
   }
 
   /**
@@ -199,7 +215,14 @@ public class RunMojo extends AbstractPackagingMojo
 
     try
     {
-      createExploded(exploded, descriptor, smps);
+      if (link)
+      {
+        createExplodedLinked(exploded, descriptor, smps);
+      }
+      else
+      {
+        createExploded(exploded, descriptor, smps);
+      }
     }
     catch (IOException ex)
     {
@@ -210,6 +233,64 @@ public class RunMojo extends AbstractPackagingMojo
 
     logger.info("start scm-maven-server with war {}", warFile);
     runServletContainer(warFile);
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param target
+   * @param descriptor
+   * @param smpDeps
+   *
+   * @throws IOException
+   * @throws MojoExecutionException
+   */
+  private void createExplodedLinked(File target, File descriptor,
+    Set<ArtifactItem> smpDeps)
+    throws IOException, MojoExecutionException
+  {
+    logger.info("create exploded linked smp at {}", target);
+    copyDescriptor(target, descriptor);
+
+    if (classesDirectory.exists())
+    {
+      Path classesLink = new File(target, DIRECTORY_CLASSES).toPath();
+
+      if (!Files.isSymbolicLink(classesLink))
+      {
+
+        if (Files.exists(classesLink))
+        {
+          delete(classesLink);
+        }
+
+        logger.debug("link classes directory {} to {}", classesDirectory,
+          classesLink);
+
+        Files.createSymbolicLink(classesLink, classesDirectory.toPath());
+      }
+    }
+
+    if (webappDirectory.exists())
+    {
+      Path webappLink = new File(target, DIRECTORY_WEBAPP).toPath();
+
+      if (Files.exists(webappLink))
+      {
+        delete(webappLink);
+      }
+
+      if (!Files.isSymbolicLink(webappLink))
+      {
+        logger.debug("link webapp directory {} to {}", webappDirectory,
+          webappLink);
+
+        Files.createSymbolicLink(webappLink, classesDirectory.toPath());
+      }
+    }
+
+    copyDependencies(new File(target, DIRECTORY_LIB), smpDeps);
   }
 
   /**
@@ -226,6 +307,28 @@ public class RunMojo extends AbstractPackagingMojo
     path.append(File.separator).append(artifact.getArtifactId());
 
     return path.toString();
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param path
+   *
+   * @throws IOException
+   */
+  private void delete(Path path) throws IOException
+  {
+    logger.debug("delete {}", path);
+
+    if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+    {
+      FileUtils.deleteDirectory(path.toFile());
+    }
+    else
+    {
+      Files.delete(path);
+    }
   }
 
   /**
@@ -392,11 +495,15 @@ public class RunMojo extends AbstractPackagingMojo
 
   /** Field description */
   @Parameter
-  private boolean backgroud = false;
+  private String contextPath = "/scm";
 
   /** Field description */
   @Parameter
-  private String contextPath = "/scm";
+  private boolean link = true;
+
+  /** Field description */
+  @Parameter
+  private boolean backgroud = false;
 
   /** Field description */
   @Parameter(property = "loggingConfiguration",
