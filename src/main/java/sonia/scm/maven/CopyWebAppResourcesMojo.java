@@ -52,10 +52,8 @@ import java.io.IOException;
  * @author Sebastian Sdorra
  *
  */
-@Mojo(
-  name = "copy-webapp-resources",
-  defaultPhase = LifecyclePhase.PROCESS_RESOURCES
-)
+@Mojo(name = "copy-webapp-resources",
+  defaultPhase = LifecyclePhase.PROCESS_RESOURCES)
 public class CopyWebAppResourcesMojo extends AbstractWebappMojo
 {
 
@@ -95,11 +93,11 @@ public class CopyWebAppResourcesMojo extends AbstractWebappMojo
    * Method description
    *
    *
-   * @param webappSourceDirectory
+   * @param webappTargetDirectory
    */
-  public void setWebappSourceDirectory(File webappSourceDirectory)
+  public void setWebappTargetDirectory(File webappTargetDirectory)
   {
-    this.webappSourceDirectory = webappSourceDirectory;
+    this.webappTargetDirectory = webappTargetDirectory;
   }
 
   //~--- methods --------------------------------------------------------------
@@ -116,9 +114,9 @@ public class CopyWebAppResourcesMojo extends AbstractWebappMojo
   {
     try
     {
-      if (webappSourceDirectory.exists() && webappSourceDirectory.isDirectory())
+      if (webappDirectory.exists() && webappDirectory.isDirectory())
       {
-        copyDirectory(webappSourceDirectory, webappDirectory);
+        copyDirectory(webappDirectory, webappTargetDirectory);
       }
     }
     catch (IOException ex)
@@ -130,6 +128,6 @@ public class CopyWebAppResourcesMojo extends AbstractWebappMojo
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
-  @Parameter(defaultValue = "${basedir}/src/main/webapp")
-  private File webappSourceDirectory;
+  @Parameter(defaultValue = "${project.build.directory}/${project.name}")
+  private File webappTargetDirectory;
 }

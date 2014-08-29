@@ -61,6 +61,6 @@ public abstract class AbstractWebappMojo extends AbstractSmpMojo
   //~--- fields ---------------------------------------------------------------
 
   /** Field description */
-  @Parameter(defaultValue = "${project.build.directory}/${project.name}")
+  @Parameter(defaultValue = "${basedir}/src/main/webapp")
   protected File webappDirectory;
 }

@@ -41,7 +41,6 @@ https://bitbucket.org/sdorra/smp-maven-plugin
         <phases>
           <process-resources>
             org.apache.maven.plugins:maven-resources-plugin:resources,
-            sonia.scm.maven:smp-maven-plugin:copy-webapp-resources,
             sonia.scm.maven:smp-maven-plugin:fix-descriptor,
             sonia.scm.maven:smp-maven-plugin:append-dependencies,
             sonia.scm.maven:smp-maven-plugin:compress-webapp-resources
