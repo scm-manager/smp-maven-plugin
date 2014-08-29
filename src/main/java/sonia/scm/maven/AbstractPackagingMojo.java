@@ -76,12 +76,13 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
   protected static final String PACKAGE_JAR = "jar";
 
   /** Field description */
-  private static final String DIRECTORY_CLASSES =
-    "WEB-INF".concat(File.separator).concat("classes");
+  private static final String DIRECTORY_CLASSES = "classes";
 
   /** Field description */
-  private static final String DIRECTORY_LIB =
-    "WEB-INF".concat(File.separator).concat("lib");
+  private static final String DIRECTORY_LIB = "lib";
+
+  /** Field description */
+  private static final String DIRECTORY_WEBAPP = "webapp";
 
   /**
    * the logger for Packaging
@@ -270,7 +271,7 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
 
     if (isDirectory(webappDirectory))
     {
-      copy(webappDirectory, target);
+      copy(webappDirectory, new File(target, DIRECTORY_WEBAPP));
     }
     else
     {
