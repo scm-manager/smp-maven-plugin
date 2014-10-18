@@ -446,6 +446,9 @@ public class RunMojo extends AbstractPackagingMojo
       new StopMonitorThread(server, stopPort, stopKey).start();
       server.start();
 
+      logger.info("scm-server is now accessible at http://localhost:{}{}",
+        port, contextPath);
+
       if (!backgroud)
       {
         server.join();
