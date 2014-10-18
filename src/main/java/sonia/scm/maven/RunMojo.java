@@ -310,7 +310,7 @@ public class RunMojo extends AbstractPackagingMojo
         logger.debug("link webapp directory {} to {}", webappDirectory,
           webappLink);
 
-        Files.createSymbolicLink(webappLink, classesDirectory.toPath());
+        Files.createSymbolicLink(webappLink, webappDirectory.toPath());
       }
     }
 
