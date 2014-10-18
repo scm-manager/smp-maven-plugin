@@ -72,6 +72,11 @@ import javax.xml.transform.stream.StreamResult;
 public class FixDescriptorMojo extends AbstractDescriptorMojo
 {
 
+  /** Field description */
+  private static final String SCM_VERSION = "2";
+
+  //~--- methods --------------------------------------------------------------
+
   /**
    * Method description
    *
@@ -171,6 +176,9 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
   private void fixDescriptor(Document document)
   {
     Element rootElement = document.getDocumentElement();
+
+    fixRootElement(document, rootElement);
+
     NodeList informationNodeList =
       rootElement.getElementsByTagName("information");
     Node informationNode = null;
@@ -295,6 +303,44 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
     }
 
     // TODO handle author node
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param document
+   * @param rootElement
+   */
+  private void fixRootElement(Document document, Element rootElement)
+  {
+    NodeList children = rootElement.getChildNodes();
+    boolean scmVersion = false;
+
+    for (int i = 0; i < children.getLength(); i++)
+    {
+      Node node = children.item(i);
+      String nodeName = node.getNodeName();
+
+      if (!Strings.isNullOrEmpty(nodeName))
+      {
+        switch (nodeName)
+        {
+          case "scm-version" :
+            scmVersion = true;
+
+            break;
+        }
+      }
+    }
+
+    if (!scmVersion)
+    {
+      Element scmVersionEl = document.createElement("scm-version");
+
+      scmVersionEl.setTextContent(SCM_VERSION);
+      rootElement.appendChild(scmVersionEl);
+    }
   }
 
   /**
