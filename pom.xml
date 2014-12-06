@@ -112,7 +112,7 @@
     <dependency>
       <groupId>com.github.sdorra</groupId>
       <artifactId>buildfrontend-maven-plugin</artifactId>
-      <version>1.0.2</version>
+      <version>1.0.5</version>
     </dependency>
     
     <!-- jetty -->
@@ -271,7 +271,7 @@
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
     
-    <maven.version>3.1.0</maven.version>
+    <maven.version>3.0.5</maven.version>
     <jetty.version>9.2.2.v20140723</jetty.version>
   </properties>
 </project>

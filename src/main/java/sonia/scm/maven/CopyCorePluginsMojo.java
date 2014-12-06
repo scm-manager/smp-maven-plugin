@@ -35,6 +35,7 @@ package sonia.scm.maven;
 
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
+import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 
 import org.apache.maven.artifact.Artifact;
@@ -55,7 +56,9 @@ import org.slf4j.LoggerFactory;
 //~--- JDK imports ------------------------------------------------------------
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import java.util.List;
 
@@ -164,6 +167,19 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
    * Method description
    *
    *
+   * @param file
+   *
+   * @return
+   */
+  private ByteSource asByteSource(File file)
+  {
+    return new FileByteSource(file);
+  }
+
+  /**
+   * Method description
+   *
+   *
    * @param artifactItem
    *
    * @return
@@ -211,7 +227,7 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
 
     try
     {
-      hash = Files.hash(file, Hashing.sha256()).toString();
+      hash = asByteSource(file).hash(Hashing.sha256()).toString();
     }
     catch (IOException ex)
     {
@@ -252,6 +268,46 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
   }
 
   //~--- inner classes --------------------------------------------------------
+
+  /**
+   * Workaround for missing methods in {@link Files} class with maven 3.0.x.
+   */
+  private static class FileByteSource extends ByteSource
+  {
+
+    /**
+     * Constructs ...
+     *
+     *
+     * @param file
+     */
+    public FileByteSource(File file)
+    {
+      this.file = file;
+    }
+
+    //~--- methods ------------------------------------------------------------
+
+    /**
+     * Method description
+     *
+     *
+     * @return
+     *
+     * @throws IOException
+     */
+    @Override
+    public InputStream openStream() throws IOException
+    {
+      return new FileInputStream(file);
+    }
+
+    //~--- fields -------------------------------------------------------------
+
+    /** Field description */
+    private final File file;
+  }
+
 
   /**
    * Class description
