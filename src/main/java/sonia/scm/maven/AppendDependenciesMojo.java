@@ -34,6 +34,8 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.collect.Lists;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -47,6 +49,8 @@ import org.slf4j.LoggerFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import org.xml.sax.SAXException;
 
@@ -55,6 +59,7 @@ import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.List;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -157,6 +162,32 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
    * Method description
    *
    *
+   * @param doc
+   *
+   * @return
+   */
+  private List<Node> findDependenciesElements(Document doc)
+  {
+    List<Node> nodes = Lists.newArrayList();
+    NodeList list = doc.getElementsByTagName(ELEMENT_DEPENDENCIES);
+
+    for (int i = 0; i < list.getLength(); i++)
+    {
+      Node node = list.item(i);
+
+      if (ELEMENT_DEPENDENCIES.equals(node.getNodeName()))
+      {
+        nodes.add(node);
+      }
+    }
+
+    return nodes;
+  }
+
+  /**
+   * Method description
+   *
+   *
    *
    * @param descriptor
    * @param dependencies
@@ -175,6 +206,13 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
     DocumentBuilder builder =
       DocumentBuilderFactory.newInstance().newDocumentBuilder();
     Document doc = builder.parse(descriptor);
+
+    // drop existing
+    for (Node node : findDependenciesElements(doc))
+    {
+      node.getParentNode().removeChild(node);
+    }
+
     Element dependenciesEl = doc.createElement(ELEMENT_DEPENDENCIES);
 
     doc.getDocumentElement().appendChild(dependenciesEl);
