@@ -129,6 +129,40 @@
       <artifactId>jetty-webapp</artifactId>
       <version>${jetty.version}</version>
     </dependency>
+    
+    <!-- websockets/livereload -->
+     
+    <dependency>
+      <groupId>javax.websocket</groupId>
+      <artifactId>javax.websocket-api</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>javax-websocket-server-impl</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>javax-websocket-client-impl</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+    
+    <!-- json/livereload -->
+    
+    <dependency>
+      <groupId>javax.json</groupId>
+      <artifactId>javax.json-api</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish</groupId>
+      <artifactId>javax.json</artifactId>
+      <version>1.0.4</version>
+    </dependency>
 
   </dependencies>
 
@@ -273,6 +307,6 @@
     <maven.compiler.target>1.7</maven.compiler.target>
     
     <maven.version>3.0.5</maven.version>
-    <jetty.version>9.2.2.v20140723</jetty.version>
+    <jetty.version>9.2.7.v20150116</jetty.version>
   </properties>
 </project>

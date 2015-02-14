@@ -51,14 +51,23 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.archiver.UnArchiver;
 
 import org.eclipse.jetty.server.ConnectionFactory;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.websocket.jsr356.server.deploy
+  .WebSocketServerContainerInitializer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import sonia.scm.maven.lr.LiveReloadContext;
+import sonia.scm.maven.lr.LiveReloadEndPoint;
+import sonia.scm.maven.lr.LiveReloadWatcher;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -73,6 +82,11 @@ import java.nio.file.Path;
 
 import java.util.List;
 import java.util.Set;
+
+import javax.servlet.ServletException;
+
+import javax.websocket.DeploymentException;
+import javax.websocket.server.ServerContainer;
 
 /**
  *
@@ -320,6 +334,43 @@ public class RunMojo extends AbstractPackagingMojo
   /**
    * Method description
    *
+   *
+   * @return
+   *
+   * @throws DeploymentException
+   * @throws IOException
+   * @throws ServletException
+   */
+  private ServletContextHandler createLiveReloadContext(Server server)
+    throws IOException, ServletException, DeploymentException
+  {
+
+    // enable livereload
+    LiveReloadContext.init(webappDirectory.toPath());
+
+    logger.info("start LiveReloadFSWatcher thread");
+
+    Thread thread = new Thread(new LiveReloadWatcher(), "LiveReloadFSWatcher");
+
+    thread.start();
+
+    ServletContextHandler context =
+      new ServletContextHandler(ServletContextHandler.SESSIONS);
+
+    context.setContextPath("/");
+    context.setServer(server);
+
+    ServerContainer wsc =
+      WebSocketServerContainerInitializer.configureContext(context);
+
+    wsc.addEndpoint(LiveReloadEndPoint.class);
+
+    return context;
+  }
+
+  /**
+   * Method description
+   *
    * @param artifact
    * @return
    */
@@ -331,6 +382,57 @@ public class RunMojo extends AbstractPackagingMojo
     path.append(File.separator).append(artifact.getArtifactId());
 
     return path.toString();
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param warFile
+   *
+   * @return
+   */
+  private WebAppContext createScmContext(File warFile)
+  {
+    WebAppContext warContext = new WebAppContext();
+
+    warContext.setContextPath(contextPath);
+    warContext.setExtractWAR(true);
+    warContext.setWar(warFile.getAbsolutePath());
+
+    return warContext;
+  }
+
+  /**
+   * Method description
+   *
+   *
+   * @param server
+   *
+   * @return
+   */
+  private ServerConnector createServerConnector(Server server)
+  {
+    ServerConnector connector = new ServerConnector(server);
+    HttpConfiguration cfg = new HttpConfiguration();
+
+    cfg.setRequestHeaderSize(HEADERBUFFERSIZE);
+    cfg.setResponseHeaderSize(HEADERBUFFERSIZE);
+
+    List<ConnectionFactory> factories = Lists.newArrayList();
+
+    factories.add(new HttpConnectionFactory(cfg));
+    connector.setConnectionFactories(factories);
+
+    if (openBrowser && Desktop.isDesktopSupported())
+    {
+      connector.addLifeCycleListener(new OpenBrowserListener(port,
+        contextPath));
+    }
+
+    connector.setPort(port);
+
+    return connector;
   }
 
   /**
@@ -441,37 +543,26 @@ public class RunMojo extends AbstractPackagingMojo
 
       Server server = new Server();
 
-      ServerConnector connector = new ServerConnector(server);
-      HttpConfiguration cfg = new HttpConfiguration();
+      server.addConnector(createServerConnector(server));
 
-      cfg.setRequestHeaderSize(HEADERBUFFERSIZE);
-      cfg.setResponseHeaderSize(HEADERBUFFERSIZE);
+      ContextHandlerCollection col = new ContextHandlerCollection();
 
-      List<ConnectionFactory> factories = Lists.newArrayList();
+      //J-
+      col.setHandlers(new Handler[]{
+        createScmContext(warFile), 
+        createLiveReloadContext(server)
+      });
+      //J+
+      server.setHandler(col);
 
-      factories.add(new HttpConnectionFactory(cfg));
-      connector.setConnectionFactories(factories);
-
-      if (openBrowser && Desktop.isDesktopSupported())
-      {
-        connector.addLifeCycleListener(new OpenBrowserListener(port,
-          contextPath));
-      }
-
-      connector.setPort(port);
-      server.addConnector(connector);
-
-      WebAppContext warContext = new WebAppContext();
-
-      warContext.setContextPath(contextPath);
-      warContext.setExtractWAR(true);
-      warContext.setWar(warFile.getAbsolutePath());
-      server.setHandler(warContext);
+      // server.setHandler(warContext);
       new StopMonitorThread(server, stopPort, stopKey).start();
       server.start();
 
       logger.info("scm-server is now accessible at http://localhost:{}{}",
         port, contextPath);
+      logger.info("livereload is available at ws://localhost:{}/livereload",
+        port);
 
       if (!backgroud)
       {
