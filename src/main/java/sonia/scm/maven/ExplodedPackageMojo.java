@@ -71,7 +71,7 @@ public class ExplodedPackageMojo extends AbstractPackagingMojo
    * @throws MojoFailureException
    */
   @Override
-  protected void doExecute(File descriptor)
+  protected void execute(File descriptor)
     throws MojoExecutionException, MojoFailureException
   {
     Set<ArtifactItem> smps = SmpDependencyCollector.collect(project);

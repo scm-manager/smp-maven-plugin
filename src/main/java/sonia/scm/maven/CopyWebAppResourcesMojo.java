@@ -110,7 +110,7 @@ public class CopyWebAppResourcesMojo extends AbstractWebappMojo
    * @throws MojoFailureException
    */
   @Override
-  protected void doExecute() throws MojoExecutionException, MojoFailureException
+  public void execute() throws MojoExecutionException, MojoFailureException
   {
     try
     {

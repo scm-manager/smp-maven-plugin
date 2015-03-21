@@ -109,7 +109,7 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
    * @throws MojoFailureException
    */
   @Override
-  public void doExecute(File descriptor)
+  protected void execute(File descriptor)
     throws MojoExecutionException, MojoFailureException
   {
     if (descriptor.exists())

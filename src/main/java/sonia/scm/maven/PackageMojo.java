@@ -161,7 +161,7 @@ public class PackageMojo extends AbstractPackagingMojo
    * @throws MojoFailureException
    */
   @Override
-  protected void doExecute(File descriptor)
+  protected void execute(File descriptor)
     throws MojoExecutionException, MojoFailureException
   {
     if (!descriptor.exists())

@@ -66,13 +66,14 @@ import javax.xml.bind.JAXB;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.apache.maven.plugin.AbstractMojo;
 
 /**
  *
  * @author Sebastian Sdorra
  */
 @Mojo(name = "copy-core-plugins", defaultPhase = LifecyclePhase.COMPILE)
-public class CopyCorePluginsMojo extends AbstractSmpMojo
+public class CopyCorePluginsMojo extends AbstractMojo
 {
 
   /** Field description */
@@ -129,7 +130,7 @@ public class CopyCorePluginsMojo extends AbstractSmpMojo
    * @throws MojoFailureException
    */
   @Override
-  protected void doExecute() throws MojoExecutionException, MojoFailureException
+  public void execute() throws MojoExecutionException, MojoFailureException
   {
     if (!outputDirectory.exists() &&!outputDirectory.mkdirs())
     {

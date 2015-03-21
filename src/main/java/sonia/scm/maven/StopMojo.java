@@ -47,13 +47,14 @@ import java.io.PrintWriter;
 
 import java.net.InetAddress;
 import java.net.Socket;
+import org.apache.maven.plugin.AbstractMojo;
 
 /**
  *
  * @author Sebastian Sdorra
  */
 @Mojo(name = "stop")
-public class StopMojo extends AbstractSmpMojo
+public class StopMojo extends AbstractMojo
 {
 
   /** Field description */
@@ -122,7 +123,7 @@ public class StopMojo extends AbstractSmpMojo
    * @throws MojoFailureException
    */
   @Override
-  protected void doExecute() throws MojoExecutionException, MojoFailureException
+  public void execute() throws MojoExecutionException, MojoFailureException
   {
     try (Socket socket = createSocket();
       PrintWriter writer = createWriter(socket))

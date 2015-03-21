@@ -235,7 +235,7 @@ public class RunMojo extends AbstractPackagingMojo
    * @throws MojoFailureException
    */
   @Override
-  protected void doExecute(File descriptor)
+  protected void execute(File descriptor)
     throws MojoExecutionException, MojoFailureException
   {
     File pluginDirectory = new File(scmHome, DIRECTORY_PLUGINS);
@@ -530,7 +530,7 @@ public class RunMojo extends AbstractPackagingMojo
    */
   private void runServletContainer(File warFile) throws MojoExecutionException
   {
-    logger.info("start servletcontainer at port " + port);
+    logger.info("start servletcontainer at port {}", port);
 
     try
     {

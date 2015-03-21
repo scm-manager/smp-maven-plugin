@@ -34,6 +34,7 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -44,7 +45,7 @@ import java.io.File;
  *
  * @author Sebastian Sdorra
  */
-public abstract class AbstractWebappMojo extends AbstractSmpMojo
+public abstract class AbstractWebappMojo extends AbstractMojo
 {
 
   /**

@@ -87,12 +87,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.googlecode.slf4j-maven-plugin-log</groupId>
-      <artifactId>slf4j-maven-plugin-log</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-
-    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>16.0.1</version>
@@ -103,13 +97,7 @@
       <artifactId>plexus-archiver</artifactId>
       <version>2.4.4</version>
     </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.7</version>
-    </dependency>
-
+    
     <dependency>
       <groupId>com.github.sdorra</groupId>
       <artifactId>buildfrontend-maven-plugin</artifactId>
@@ -306,7 +294,7 @@
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
     
-    <maven.version>3.0.5</maven.version>
+    <maven.version>3.1.1</maven.version>
     <jetty.version>9.2.7.v20150116</jetty.version>
   </properties>
 </project>

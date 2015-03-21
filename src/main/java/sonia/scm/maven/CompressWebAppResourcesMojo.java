@@ -170,7 +170,7 @@ public class CompressWebAppResourcesMojo extends AbstractWebappMojo
    * @throws MojoFailureException
    */
   @Override
-  protected void doExecute() throws MojoExecutionException, MojoFailureException
+  public void execute() throws MojoExecutionException, MojoFailureException
   {
     if (!disableCompression)
     {

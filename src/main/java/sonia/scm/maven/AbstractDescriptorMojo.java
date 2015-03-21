@@ -62,7 +62,7 @@ public abstract class AbstractDescriptorMojo extends AbstractWebappMojo
    * @throws MojoExecutionException
    * @throws MojoFailureException
    */
-  protected abstract void doExecute(File descriptor)
+  protected abstract void execute(File descriptor)
     throws MojoExecutionException, MojoFailureException;
 
   //~--- set methods ----------------------------------------------------------
@@ -99,11 +99,9 @@ public abstract class AbstractDescriptorMojo extends AbstractWebappMojo
    * @throws MojoFailureException
    */
   @Override
-  protected void doExecute() throws MojoExecutionException, MojoFailureException
+  public void execute() throws MojoExecutionException, MojoFailureException
   {
-    File descriptor = new File(outputDirectory, descriptorPath);
-
-    doExecute(descriptor);
+    execute(new File(outputDirectory, descriptorPath));
   }
 
   //~--- fields ---------------------------------------------------------------
