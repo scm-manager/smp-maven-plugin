@@ -33,26 +33,21 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.eclipse.jetty.util.component.LifeCycle;
-import org.eclipse.jetty.util.component.LifeCycle.Listener;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//~--- JDK imports ------------------------------------------------------------
-
-import java.awt.Desktop;
-
+import java.awt.*;
 import java.io.IOException;
-
-import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
  * @author Sebastian Sdorra
  */
-public class OpenBrowserListener implements Listener
+public class OpenBrowserListener implements ScmServerListener
 {
 
   /**
@@ -63,107 +58,25 @@ public class OpenBrowserListener implements Listener
 
   //~--- constructors ---------------------------------------------------------
 
-  /**
-   * Constructs ...
-   *
-   *
-   * @param port
-   * @param contextPath
-   */
-  public OpenBrowserListener(int port, String contextPath)
-  {
-    this.port = port;
-    this.contextPath = contextPath;
-  }
-
-  //~--- methods --------------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @param event
-   * @param cause
-   */
   @Override
-  public void lifeCycleFailure(LifeCycle event, Throwable cause)
+  public void started(URL baseURL)
   {
-
-    // do nothing
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param event
-   */
-  @Override
-  public void lifeCycleStarted(LifeCycle event)
-  {
-    new Thread(new Runnable()
-    {
-      @Override
-      public void run()
+    new Thread(() -> {
+      try
       {
-        try
-        {
-          Desktop desktop = Desktop.getDesktop();
+        Desktop desktop = Desktop.getDesktop();
 
-          desktop.browse(new URI("http://localhost:" + port + contextPath));
-        }
-        catch (IOException | URISyntaxException ex)
-        {
-          logger.warn("could not open browser", ex);
-        }
+        desktop.browse(baseURL.toURI());
+      }
+      catch (IOException | URISyntaxException ex)
+      {
+        logger.warn("could not open browser", ex);
       }
     }).start();
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param event
-   */
   @Override
-  public void lifeCycleStarting(LifeCycle event)
-  {
-
-    // do nothing
+  public void stopped(URL baseURL) {
+    // nothing to be done on stop
   }
-
-  /**
-   * Method description
-   *
-   *
-   * @param event
-   */
-  @Override
-  public void lifeCycleStopped(LifeCycle event)
-  {
-
-    // do nothing
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param event
-   */
-  @Override
-  public void lifeCycleStopping(LifeCycle event)
-  {
-
-    // do nothing
-  }
-
-  //~--- fields ---------------------------------------------------------------
-
-  /** Field description */
-  private final String contextPath;
-
-  /** Field description */
-  private final int port;
 }

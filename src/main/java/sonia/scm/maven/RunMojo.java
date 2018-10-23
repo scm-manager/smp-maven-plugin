@@ -35,58 +35,22 @@ package sonia.scm.maven;
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-
-import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
-
 import org.codehaus.plexus.archiver.UnArchiver;
-
-import org.eclipse.jetty.server.ConnectionFactory;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.eclipse.jetty.websocket.jsr356.server.deploy
-  .WebSocketServerContainerInitializer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sonia.scm.maven.lr.LiveReloadContext;
-import sonia.scm.maven.lr.LiveReloadEndPoint;
-import sonia.scm.maven.lr.LiveReloadWatcher;
-
-//~--- JDK imports ------------------------------------------------------------
-
-import java.awt.Desktop;
-
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-
-import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-import javax.servlet.ServletException;
-
-import javax.websocket.DeploymentException;
-import javax.websocket.server.ServerContainer;
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
@@ -94,17 +58,15 @@ import javax.websocket.server.ServerContainer;
  */
 @Mojo(
   name = "run",
-  defaultPhase = LifecyclePhase.COMPILE,
+  defaultPhase = LifecyclePhase.PACKAGE,
   requiresDependencyResolution = ResolutionScope.RUNTIME
 )
+@Execute(phase = LifecyclePhase.PACKAGE)
 public class RunMojo extends AbstractPackagingMojo
 {
 
   /** Field description */
   private static final String DIRECTORY_PLUGINS = "plugins";
-
-  /** Field description */
-  private static final int HEADERBUFFERSIZE = 16384;
 
   /**
    * the logger for RunMojo
@@ -232,15 +194,12 @@ public class RunMojo extends AbstractPackagingMojo
    * @param descriptor
    *
    * @throws MojoExecutionException
-   * @throws MojoFailureException
    */
   @Override
   protected void execute(File descriptor)
-    throws MojoExecutionException, MojoFailureException
-  {
+    throws MojoExecutionException {
     File pluginDirectory = new File(scmHome, DIRECTORY_PLUGINS);
-    File exploded = new File(pluginDirectory,
-                      createPluginPath(project.getArtifact()));
+    File exploded = new File(pluginDirectory, createPluginPath(project.getArtifact()));
 
     // TODO check for version updates
     // TODO transitive smp dependencies
@@ -251,11 +210,15 @@ public class RunMojo extends AbstractPackagingMojo
       install(pluginDirectory, smp);
     }
 
+    PluginPathResolver pathResolver = new PluginPathResolver(
+            classesDirectory.toPath(), packageDirectory.toPath(), exploded.toPath()
+    );
+
     try
     {
       if (link)
       {
-        createExplodedLinked(exploded, descriptor, smps);
+        createExplodedLinked(pathResolver);
       }
       else
       {
@@ -270,102 +233,14 @@ public class RunMojo extends AbstractPackagingMojo
     File warFile = getWebApplicationArchive();
 
     logger.info("start scm-maven-server with war {}", warFile);
-    runServletContainer(warFile);
+    runScmServer(pathResolver, warFile);
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param target
-   * @param descriptor
-   * @param smpDeps
-   *
-   * @throws IOException
-   * @throws MojoExecutionException
-   */
-  private void createExplodedLinked(File target, File descriptor,
-    Set<ArtifactItem> smpDeps)
-    throws IOException, MojoExecutionException
-  {
-    logger.info("create exploded linked smp at {}", target);
-    copyDescriptor(target, descriptor);
 
-    if (classesDirectory.exists())
-    {
-      Path classesLink = new File(target, DIRECTORY_CLASSES).toPath();
-
-      if (!Files.isSymbolicLink(classesLink))
-      {
-
-        if (Files.exists(classesLink))
-        {
-          delete(classesLink);
-        }
-
-        logger.debug("link classes directory {} to {}", classesDirectory,
-          classesLink);
-
-        Files.createSymbolicLink(classesLink, classesDirectory.toPath());
-      }
-    }
-
-    if (webappDirectory.exists())
-    {
-      Path webappLink = new File(target, DIRECTORY_WEBAPP).toPath();
-
-      if (Files.exists(webappLink))
-      {
-        delete(webappLink);
-      }
-
-      if (!Files.isSymbolicLink(webappLink))
-      {
-        logger.debug("link webapp directory {} to {}", webappDirectory,
-          webappLink);
-
-        Files.createSymbolicLink(webappLink, webappDirectory.toPath());
-      }
-    }
-
-    copyDependencies(new File(target, DIRECTORY_LIB), smpDeps);
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @return
-   *
-   * @throws DeploymentException
-   * @throws IOException
-   * @throws ServletException
-   */
-  private ServletContextHandler createLiveReloadContext(Server server)
-    throws IOException, ServletException, DeploymentException
-  {
-
-    // enable livereload
-    LiveReloadContext.init(webappDirectory.toPath());
-
-    logger.info("start LiveReloadFSWatcher thread");
-
-    Thread thread = new Thread(new LiveReloadWatcher(), "LiveReloadFSWatcher");
-
-    thread.start();
-
-    ServletContextHandler context =
-      new ServletContextHandler(ServletContextHandler.SESSIONS);
-
-    context.setContextPath("/");
-    context.setServer(server);
-
-    ServerContainer wsc =
-      WebSocketServerContainerInitializer.configureContext(context);
-
-    wsc.addEndpoint(LiveReloadEndPoint.class);
-
-    return context;
+  private void createExplodedLinked(PluginPathResolver pathResolver) throws IOException {
+    logger.info("create exploded linked smp at {}", pathResolver.getInstallationDirectory());
+    PluginLinker linker = new PluginLinker(pathResolver);
+    linker.link();
   }
 
   /**
@@ -382,79 +257,6 @@ public class RunMojo extends AbstractPackagingMojo
     path.append(File.separator).append(artifact.getArtifactId());
 
     return path.toString();
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param warFile
-   *
-   * @return
-   */
-  private WebAppContext createScmContext(File warFile)
-  {
-    WebAppContext warContext = new WebAppContext();
-
-    warContext.setContextPath(contextPath);
-    warContext.setExtractWAR(true);
-    warContext.setWar(warFile.getAbsolutePath());
-
-    return warContext;
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param server
-   *
-   * @return
-   */
-  private ServerConnector createServerConnector(Server server)
-  {
-    ServerConnector connector = new ServerConnector(server);
-    HttpConfiguration cfg = new HttpConfiguration();
-
-    cfg.setRequestHeaderSize(HEADERBUFFERSIZE);
-    cfg.setResponseHeaderSize(HEADERBUFFERSIZE);
-
-    List<ConnectionFactory> factories = Lists.newArrayList();
-
-    factories.add(new HttpConnectionFactory(cfg));
-    connector.setConnectionFactories(factories);
-
-    if (openBrowser && Desktop.isDesktopSupported())
-    {
-      connector.addLifeCycleListener(new OpenBrowserListener(port,
-        contextPath));
-    }
-
-    connector.setPort(port);
-
-    return connector;
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param path
-   *
-   * @throws IOException
-   */
-  private void delete(Path path) throws IOException
-  {
-    logger.debug("delete {}", path);
-
-    if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
-    {
-      FileUtils.deleteDirectory(path.toFile());
-    }
-    else
-    {
-      Files.delete(path);
-    }
   }
 
   /**
@@ -528,51 +330,37 @@ public class RunMojo extends AbstractPackagingMojo
    *
    * @throws MojoExecutionException
    */
-  private void runServletContainer(File warFile) throws MojoExecutionException
+  private void runScmServer(PluginPathResolver pathResolver, File warFile) throws MojoExecutionException
   {
-    logger.info("start servletcontainer at port {}", port);
+    ScmServer.ScmServerBuilder builder = ScmServer.builder(warFile.toPath(), scmHome.toPath())
+            .withPort(port)
+            .withContextPath(contextPath)
+            .withBackground(backgroud)
+            .withDisableCorePlugins(corePlugin)
+            .withLoggingConfiguration(loggingConfiguration)
+            .withStopPort(stopPort)
+            .withStopKey(stopKey)
+            .withStage(stage);
 
-    try
-    {
-      System.setProperty("scm.home", scmHome.getPath());
-      System.setProperty("scm.stage", stage);
-      logger.info("set stage {}", stage);
-
-      // enable debug logging
-      System.setProperty("logback.configurationFile", loggingConfiguration);
-
-      Server server = new Server();
-
-      server.addConnector(createServerConnector(server));
-
-      ContextHandlerCollection col = new ContextHandlerCollection();
-
-      //J-
-      col.setHandlers(new Handler[]{
-        createScmContext(warFile), 
-        createLiveReloadContext(server)
-      });
-      //J+
-      server.setHandler(col);
-
-      // server.setHandler(warContext);
-      new StopMonitorThread(server, stopPort, stopKey).start();
-      server.start();
-
-      logger.info("scm-server is now accessible at http://localhost:{}{}",
-        port, contextPath);
-      logger.info("livereload is available at ws://localhost:{}/livereload",
-        port);
-
-      if (!backgroud)
-      {
-        server.join();
-      }
+    if (isOpenBrowserListenerEnabled()) {
+      logger.info("install open browser listener");
+      builder.withListener(new OpenBrowserListener());
     }
-    catch (Exception ex)
-    {
-      throw new MojoExecutionException("could not start servletcontainer", ex);
+
+    if (restartNotifier) {
+      logger.info("install restart notifier");
+      long timeout = TimeUnit.SECONDS.toMillis(restartWaitTimeout);
+      builder.withListener(
+          new RestartNotificationLifeCycleListener(pathResolver, contextPath + restartPath, timeout)
+      );
     }
+
+    ScmServer server = builder.build();
+    server.start();
+  }
+
+  private boolean isOpenBrowserListenerEnabled() {
+    return openBrowser && Desktop.isDesktopSupported();
   }
 
   //~--- get methods ----------------------------------------------------------
@@ -604,12 +392,25 @@ public class RunMojo extends AbstractPackagingMojo
       webApplication.setVersion(version);
     }
 
-    File warFile = checkAndResolve(convertToArtifact(webApplication));
-
-    return warFile;
+    return checkAndResolve(convertToArtifact(webApplication));
   }
 
   //~--- fields ---------------------------------------------------------------
+
+  @Parameter
+  private boolean restartNotifier = true;
+
+  @Parameter
+  private String restartPath = "/restart";
+
+  @Parameter(property = "smp.restart.timeout", defaultValue = "1")
+  private long restartWaitTimeout = 1;
+
+  @Parameter(defaultValue = "${project.build.directory}/${project.artifactId}-${project.version}")
+  private File packageDirectory;
+
+  @Parameter
+  private boolean corePlugin = false;
 
   /** Field description */
   @Parameter
