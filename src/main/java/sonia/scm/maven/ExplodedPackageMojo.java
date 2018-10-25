@@ -55,7 +55,6 @@ import java.util.Set;
  */
 @Mojo(
   name = "exploded",
-  defaultPhase = LifecyclePhase.PACKAGE,
   requiresDependencyResolution = ResolutionScope.RUNTIME
 )
 public class ExplodedPackageMojo extends AbstractPackagingMojo
@@ -68,12 +67,9 @@ public class ExplodedPackageMojo extends AbstractPackagingMojo
    * @param descriptor
    *
    * @throws MojoExecutionException
-   * @throws MojoFailureException
    */
   @Override
-  protected void execute(File descriptor)
-    throws MojoExecutionException, MojoFailureException
-  {
+  protected void execute(File descriptor) throws MojoExecutionException {
     Set<ArtifactItem> smps = SmpDependencyCollector.collect(project);
 
     try

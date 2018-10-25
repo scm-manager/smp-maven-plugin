@@ -43,9 +43,12 @@ https://bitbucket.org/sdorra/smp-maven-plugin
             org.apache.maven.plugins:maven-resources-plugin:resources,
             sonia.scm.maven:smp-maven-plugin:fix-descriptor,
             sonia.scm.maven:smp-maven-plugin:append-dependencies,
+            sonia.scm.maven:smp-maven-plugin:link-ui,
+            com.github.sdorra:buildfrontend-maven-plugin:install,
           </process-resources>
           <compile>
-            org.apache.maven.plugins:maven-compiler-plugin:compile
+            org.apache.maven.plugins:maven-compiler-plugin:compile,
+            sonia.scm.maven:smp-maven-plugin:build-ui,
           </compile>
           <process-classes>
             
@@ -57,7 +60,8 @@ https://bitbucket.org/sdorra/smp-maven-plugin
             org.apache.maven.plugins:maven-compiler-plugin:testCompile
           </test-compile>
           <test>
-            org.apache.maven.plugins:maven-surefire-plugin:test
+            org.apache.maven.plugins:maven-surefire-plugin:test,
+            sonia.scm.maven:smp-maven-plugin:test-ui,
           </test>
           <package>
             sonia.scm.maven:smp-maven-plugin:package
@@ -69,6 +73,41 @@ https://bitbucket.org/sdorra/smp-maven-plugin
             org.apache.maven.plugins:maven-deploy-plugin:deploy
           </deploy>
         </phases>
+      </configuration>
+    </component>
+    <component>
+      <role>org.apache.maven.lifecycle.Lifecycle</role>
+      <role-hint>smp</role-hint>
+      <implementation>org.apache.maven.lifecycle.Lifecycle</implementation>
+      <configuration>
+        <id>serve</id>
+        <phases>
+          <phase>smp-process-resources</phase>
+          <phase>smp-compile</phase>
+          <phase>smp-prepare-directory</phase>
+          <phase>build-ui</phase>
+          <phase>run</phase>
+        </phases>
+        <default-phases>
+          <smp-process-resources>
+            org.apache.maven.plugins:maven-resources-plugin:resources,
+            sonia.scm.maven:smp-maven-plugin:fix-descriptor,
+            sonia.scm.maven:smp-maven-plugin:append-dependencies,
+            sonia.scm.maven:smp-maven-plugin:link-ui,
+            com.github.sdorra:buildfrontend-maven-plugin:install,
+          </smp-process-resources>
+          <smp-compile>
+            org.apache.maven.plugins:maven-compiler-plugin:compile,
+            sonia.scm.maven:smp-maven-plugin:build-ui,
+          </smp-compile>
+          <smp-prepare-directory>
+            sonia.scm.maven:smp-maven-plugin:exploded
+          </smp-prepare-directory>
+          <run>
+            sonia.scm.maven:smp-maven-plugin:watch-ui,
+            sonia.scm.maven:smp-maven-plugin:run
+          </run>
+        </default-phases>
       </configuration>
     </component>
     <component>

@@ -59,10 +59,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Mojo(
   name = "run",
-  defaultPhase = LifecyclePhase.PACKAGE,
   requiresDependencyResolution = ResolutionScope.RUNTIME
 )
-@Execute(phase = LifecyclePhase.PACKAGE)
 public class RunMojo extends AbstractPackagingMojo
 {
 
