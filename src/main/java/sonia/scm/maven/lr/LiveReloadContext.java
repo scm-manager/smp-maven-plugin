@@ -33,86 +33,45 @@ package sonia.scm.maven.lr;
 
 //~--- JDK imports ------------------------------------------------------------
 
-import java.nio.file.Path;
+import com.google.common.collect.Sets;
+
+import javax.websocket.Session;
+import java.util.Set;
 
 /**
  * Context for live reload.
  *
  * @author Sebastian Sdorra
  */
-public class LiveReloadContext
+public final class LiveReloadContext
 {
 
-  /** instance */
-  private static LiveReloadContext INSTANCE = null;
+  private static final LiveReloadContext INSTANCE = new LiveReloadContext();
 
-  //~--- constructors ---------------------------------------------------------
+  private final LiveReloadClient client;
+  private final LiveReloadServer server;
 
-  /**
-   * Constructs ...
-   *
-   *
-   * @param webappDirectory watched directory
-   */
-  private LiveReloadContext(Path webappDirectory)
-  {
-    this.handler = new LiveReloadHandler();
-    this.webappDirectory = webappDirectory;
-  }
-
-  //~--- methods --------------------------------------------------------------
-
-  /**
-   * Initialize the context.
-   *
-   *
-   * @param webappDirectory watched directory
-   */
-  public static void init(Path webappDirectory)
-  {
-    INSTANCE = new LiveReloadContext(webappDirectory);
-  }
-
-  //~--- get methods ----------------------------------------------------------
-
-  /**
-   * Returns the LiveReloadContext instance.
-   *
-   *
-   * @return instance
-   */
-  public static LiveReloadContext getInstance()
-  {
-    return INSTANCE;
+  private LiveReloadContext() {
+    Set<Session> sessions = Sets.newConcurrentHashSet();
+    client = new LiveReloadClient(sessions);
+    server = new LiveReloadServer(sessions);
   }
 
   /**
-   * Returns the {@link LiveReloadHandler}.
+   * Returns the client component for live reload.
    *
-   *
-   * @return livereload handler
+   * @return client component
    */
-  public LiveReloadHandler getHandler()
-  {
-    return handler;
+  public static LiveReloadClient getClient() {
+    return INSTANCE.client;
   }
 
   /**
-   * Returns the path of the watched directory.
+   * Returns the server component for live reload.
    *
-   *
-   * @return watched directory
+   * @return server component
    */
-  public Path getWebappDirectory()
-  {
-    return webappDirectory;
+  public static LiveReloadServer getServer() {
+    return INSTANCE.server;
   }
-
-  //~--- fields ---------------------------------------------------------------
-
-  /** liverelaod handler */
-  private final LiveReloadHandler handler;
-
-  /** watched directory */
-  private final Path webappDirectory;
 }

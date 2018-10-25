@@ -46,34 +46,31 @@ import javax.json.JsonWriter;
  *
  * @author Sebastian Sdorra
  */
-public class LiveReloadProtocol
+public final class LiveReloadProtocol
 {
 
   /** supported protocol */
-  private static final String PROTOCOL =
-    "http://livereload.com/protocols/official-7";
+  private static final String PROTOCOL = "http://livereload.com/protocols/official-7";
 
   /** server name */
   private static final String SERVER = "smp-lr";
 
-  //~--- methods --------------------------------------------------------------
+  private LiveReloadProtocol() {
+  }
 
   /**
    * Creates an alert message.
    *
    *
-   * @param messsage alert message
+   * @param message alert message
    *
    * @return json object for alert message
    */
-  public String alert(String messsage)
-  {
-    //J-
+  public static String alert(String message) {
     JsonObject object = Json.createObjectBuilder()
       .add("command", "alert")
-      .add("message", messsage)
+      .add("message", message)
       .build();
-    //J+
 
     return toString(object);
   }
@@ -81,12 +78,9 @@ public class LiveReloadProtocol
   /**
    * Creates an hello message.
    *
-   *
    * @return json object for hello message
    */
-  public String hello()
-  {
-    //J-
+  public static String hello() {
     JsonObject object = Json.createObjectBuilder()
       .add("command", "hello")
       .add("protocols", Json.createArrayBuilder()
@@ -94,7 +88,23 @@ public class LiveReloadProtocol
         .build())
       .add("serverName", SERVER)
       .build();
-    //J+
+
+    return toString(object);
+  }
+
+  /**
+   * Creates an info message.
+   *
+   * @param url server url
+   *
+   * @return json object for info message
+   */
+  public static String info(String url) {
+    JsonObject object = Json.createObjectBuilder()
+            .add("command", "info")
+            .add("plugins", Json.createArrayBuilder().build())
+            .add("url", url)
+            .build();
 
     return toString(object);
   }
@@ -102,20 +112,16 @@ public class LiveReloadProtocol
   /**
    * Create an reload message for the modified path.
    *
-   *
    * @param path path which was modified
    *
    * @return json object for alert message
    */
-  public String reload(String path)
-  {
-    //J-
+  public static String reload(String path) {
     JsonObject object = Json.createObjectBuilder()
       .add("command", "reload")
       .add("path", path)
       .add("liveCSS", true)
       .build();
-    //J+
 
     return toString(object);
   }
@@ -125,42 +131,45 @@ public class LiveReloadProtocol
   /**
    * Returns {@code true} if the received message is a hello command.
    *
-   *
    * @param message received message
    *
    * @return {@code true} if the message is a hello command
    */
-  public boolean isHello(String message)
-  {
-    boolean result;
+  public static boolean isHello(String message) {
+    return isCommand(message, "hello");
+  }
 
-    try (JsonReader reader = Json.createReader(new StringReader(message)))
-    {
+  /**
+   * Returns {@code true} if the received message is a info command.
+   *
+   * @param message received message
+   *
+   * @return {@code true} if the message is a info command
+   */
+  public static boolean isInfo(String message) {
+    return isCommand(message, "info");
+  }
+
+  private static boolean isCommand(String message, String expectedCommand) {
+    try (JsonReader reader = Json.createReader(new StringReader(message))) {
       JsonObject object = reader.readObject();
       String command = object.getString("command");
 
-      result = "hello".equals(command);
+      return expectedCommand.equals(command);
     }
-
-    return result;
   }
-
-  //~--- methods --------------------------------------------------------------
 
   /**
    * Converts a JsonObject to string.
-   *
    *
    * @param object json object
    *
    * @return string representation of json object
    */
-  private String toString(JsonObject object)
-  {
+  private static String toString(JsonObject object) {
     StringWriter writer = new StringWriter();
 
-    try (JsonWriter jw = Json.createWriter(writer))
-    {
+    try (JsonWriter jw = Json.createWriter(writer)) {
       jw.writeObject(object);
     }
 

@@ -43,6 +43,7 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sonia.scm.maven.lr.LiveReloadLifeCycleListener;
 
 import java.awt.*;
 import java.io.File;
@@ -354,6 +355,8 @@ public class RunMojo extends AbstractPackagingMojo
           new RestartNotificationLifeCycleListener(pathResolver, contextPath + restartPath, timeout)
       );
     }
+
+    builder.withListener(new LiveReloadLifeCycleListener(pathResolver));
 
     ScmServer server = builder.build();
     server.start();

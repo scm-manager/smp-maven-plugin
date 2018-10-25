@@ -43,7 +43,6 @@ https://bitbucket.org/sdorra/smp-maven-plugin
             org.apache.maven.plugins:maven-resources-plugin:resources,
             sonia.scm.maven:smp-maven-plugin:fix-descriptor,
             sonia.scm.maven:smp-maven-plugin:append-dependencies,
-            sonia.scm.maven:smp-maven-plugin:compress-webapp-resources
           </process-resources>
           <compile>
             org.apache.maven.plugins:maven-compiler-plugin:compile

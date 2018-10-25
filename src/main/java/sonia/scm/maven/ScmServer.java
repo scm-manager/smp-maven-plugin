@@ -5,12 +5,20 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sonia.scm.maven.lr.LiveReloadEndPoint;
+import sonia.scm.maven.lr.LiveReloadScriptServlet;
 
+import javax.servlet.ServletException;
+import javax.websocket.DeploymentException;
+import javax.websocket.server.ServerContainer;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -58,6 +66,8 @@ public final class ScmServer {
             LOG.info("set stage {}", stage);
             System.setProperty("scm.stage", stage);
 
+            System.setProperty("livereload.url", "/livereload.js");
+
             if (Strings.isNullOrEmpty(loggingConfiguration)) {
                 System.setProperty("logback.configurationFile", loggingConfiguration);
             }
@@ -65,7 +75,14 @@ public final class ScmServer {
             Server server = new Server();
 
             server.addConnector(createServerConnector(server));
-            server.setHandler(createScmContext());
+
+            ContextHandlerCollection col = new ContextHandlerCollection();
+            col.setHandlers(new Handler[]{
+                createScmContext(),
+                createLiveReloadContext(server)
+            });
+            server.setHandler(col);
+
             startStopMonitor(server);
             server.start();
 
@@ -92,6 +109,19 @@ public final class ScmServer {
         warContext.setWar(warFile.toString());
 
         return warContext;
+    }
+
+    private ServletContextHandler createLiveReloadContext(Server server) throws ServletException, DeploymentException {
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+        context.setServer(server);
+
+        ServerContainer wsc = WebSocketServerContainerInitializer.configureContext(context);
+        wsc.addEndpoint(LiveReloadEndPoint.class);
+
+        context.addServlet(LiveReloadScriptServlet.class, "/livereload.js");
+
+        return context;
     }
 
     private ServerConnector createServerConnector(Server server) throws MalformedURLException {

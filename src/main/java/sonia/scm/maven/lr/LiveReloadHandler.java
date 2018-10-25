@@ -33,126 +33,41 @@ package sonia.scm.maven.lr;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import com.google.common.collect.Sets;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//~--- JDK imports ------------------------------------------------------------
-
+import javax.websocket.Session;
 import java.io.IOException;
 
-import java.util.Collections;
-import java.util.Set;
-
-import javax.websocket.Session;
+//~--- JDK imports ------------------------------------------------------------
 
 /**
- * Handler for the LiveReload sessions.
+ * Shared methods for livereload client and server.
  *
  * @author Sebastian Sdorra
  */
-public class LiveReloadHandler
-{
+abstract class LiveReloadHandler {
 
   /**
    * the logger for LiveReloadHandler
    */
-  private static final Logger logger =
-    LoggerFactory.getLogger(LiveReloadHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LiveReloadHandler.class);
 
-  //~--- methods --------------------------------------------------------------
-
-  /**
-   * Registers a new client session.
-   *
-   *
-   * @param session client session
-   */
-  public void addSession(Session session)
-  {
-    logger.debug("session {} connected", session.getId());
-    sessions.add(session);
-  }
-
-  /**
-   * Inform all client session about the modified file.
-   *
-   *
-   * @param path path to modified file
-   */
-  public void reaload(String path)
-  {
-    logger.info("send reload for path {}", path);
-
-    for (Session session : sessions)
-    {
-      logger.debug("send reload for path {} to {}", path, session.getId());
-      sendMessage(session, protocol.reload(path));
-    }
-  }
-
-  /**
-   * Handle received messages from client sessions.
-   *
-   *
-   * @param session client session
-   * @param message received message
-   */
-  public void receiveMessage(Session session, String message)
-  {
-    if (protocol.isHello(message))
-    {
-      logger.debug("received hello from {}", session.getId());
-      sendMessage(session, protocol.hello());
-    }
-    else
-    {
-      logger.warn("received unknown message {} from {}", message,
-        session.getId());
-      sendMessage(session, protocol.alert("could not handle message"));
-    }
-  }
-
-  /**
-   * Remove client session.
-   *
-   *
-   * @param session client session
-   */
-  public void removeSession(Session session)
-  {
-    logger.debug("session {} disconnected", session.getId());
-    sessions.remove(session);
-  }
 
   /**
    * Send message to client session.
    *
-   *
    * @param session client session
    * @param message message to send
    */
-  private void sendMessage(Session session, String message)
-  {
-    logger.trace("send message {} to {}", message, session.getId());
+  protected void sendMessage(Session session, String message) {
+    LOG.trace("send message {} to {}", message, session.getId());
 
-    try
-    {
+    try {
       session.getBasicRemote().sendText(message);
-    }
-    catch (IOException ex)
-    {
-      logger.warn("could not send message to lr client", ex);
+    } catch (IOException ex) {
+      LOG.warn("could not send message to lr client", ex);
     }
   }
 
-  //~--- fields ---------------------------------------------------------------
-
-  /** live reload protocol */
-  private final LiveReloadProtocol protocol = new LiveReloadProtocol();
-
-  /** registered client sessions */
-  private final Set<Session> sessions =
-    Collections.synchronizedSet(Sets.<Session>newHashSet());
 }

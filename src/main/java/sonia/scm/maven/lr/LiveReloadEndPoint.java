@@ -45,49 +45,40 @@ import javax.websocket.server.ServerEndpoint;
  * @author Sebastian Sdorra
  */
 @ServerEndpoint("/livereload")
-public class LiveReloadEndPoint
+public final class LiveReloadEndPoint
 {
 
+  /** live reload server */
+  private final LiveReloadServer server = LiveReloadContext.getServer();
+
   /**
-   * Removes the closed session from the {@link LiveReloadHandler}.
+   * Registers the client session at the {@link LiveReloadServer}.
    *
-   *
-   * @param session closed session
+   * @param session client session
    */
-  @OnClose
-  public void onClose(Session session)
-  {
-    handler.removeSession(session);
+  @OnOpen
+  public void onOpen(Session session) {
+    server.addSession(session);
   }
 
   /**
-   * Delegates the received message to the {@link LiveReloadHandler}.
-   *
+   * Delegates the received message to the {@link LiveReloadServer}.
    *
    * @param session client session
    * @param message received message
    */
   @OnMessage
-  public void onMessage(Session session, String message)
-  {
-    handler.receiveMessage(session, message);
+  public void onMessage(Session session, String message) {
+    server.receiveMessage(session, message);
   }
 
   /**
-   * Registers the client session at the {@link LiveReloadHandler}.
+   * Removes the closed session from the {@link LiveReloadServer}.
    *
-   *
-   * @param session client session
+   * @param session closed session
    */
-  @OnOpen
-  public void onOpen(Session session)
-  {
-    handler.addSession(session);
+  @OnClose
+  public void onClose(Session session) {
+    server.removeSession(session);
   }
-
-  //~--- fields ---------------------------------------------------------------
-
-  /** live reload handler */
-  private final LiveReloadHandler handler =
-    LiveReloadContext.getInstance().getHandler();
 }
