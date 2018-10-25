@@ -8,7 +8,7 @@ public class BuildUIMojo extends AbstractUIMojo {
 
   @Override
   public void execute() throws MojoExecutionException {
-    execute("run", createRunConfiguration("build"));
+    executeScript("build");
   }
 
 }

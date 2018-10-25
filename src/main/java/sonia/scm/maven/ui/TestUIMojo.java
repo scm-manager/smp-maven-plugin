@@ -8,6 +8,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 public class TestUIMojo extends AbstractUIMojo {
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
-    execute("run", createRunConfiguration("test"));
+    executeScript("test");
   }
 }

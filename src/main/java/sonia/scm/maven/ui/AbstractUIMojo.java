@@ -4,7 +4,6 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
-import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -15,6 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.twdata.maven.mojoexecutor.MojoExecutor;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +39,38 @@ public abstract class AbstractUIMojo extends AbstractMojo {
 
   @Component
   private BuildPluginManager pluginManager;
+
+  @Parameter(defaultValue = "${basedir}")
+  private File workingDirectory;
+
+
+  protected void executeScript(String script) throws MojoExecutionException {
+    executeScript(script, false);
+  }
+
+  protected void executeScript(String script, boolean background) throws MojoExecutionException {
+    try {
+      File packageJson = new File(workingDirectory, "package.json");
+      if (packageJson.exists() && hasScript(packageJson, script)) {
+        execute("run", createRunConfiguration(script), createBackgroundConfiguration(background));
+      } else {
+        LOG.warn("skip execution of script {}, because package.json or script entry is missing", script);
+      }
+    } catch (IOException ex) {
+      throw new MojoExecutionException("failed to execute script", ex);
+    }
+  }
+
+  private boolean hasScript(File packageJson, String script) throws IOException {
+    try (JsonReader reader = Json.createReader(new FileReader(packageJson))) {
+      JsonObject root = reader.readObject();
+      if (root.containsKey("scripts")) {
+        JsonObject scripts = root.getJsonObject("scripts");
+        return scripts.containsKey(script);
+      }
+    }
+    return false;
+  }
 
   protected void execute(String goal, MojoExecutor.Element ...configuration) throws MojoExecutionException {
     MojoExecutor.ExecutionEnvironment environment = executionEnvironment(project, session, pluginManager);
@@ -64,6 +101,10 @@ public abstract class AbstractUIMojo extends AbstractMojo {
     return element("script", script);
   }
 
+  private MojoExecutor.Element createBackgroundConfiguration(boolean background) {
+    return MojoExecutor.element("background", String.valueOf(background));
+  }
+
   private MojoExecutor.Element createNodeConfiguration() {
     return element("nodeConfiguration",
       element("version", "8.11.4")
@@ -80,6 +121,5 @@ public abstract class AbstractUIMojo extends AbstractMojo {
   private MojoExecutor.Element createFailOnMissingPackageJsonConfiguration() {
     return element("failOnMissingPackageJson", String.valueOf(false));
   }
-
 
 }
