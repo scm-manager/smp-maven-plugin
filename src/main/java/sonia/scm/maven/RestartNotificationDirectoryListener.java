@@ -5,11 +5,12 @@ import io.methvin.watcher.DirectoryChangeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.net.URL;
 import java.util.Deque;
 import java.util.LinkedList;
 
-public class RestartNotificationDirectoryListener implements DirectoryChangeListener {
+public class RestartNotificationDirectoryListener implements DirectoryChangeListener, Closeable {
 
     private static final Logger LOG = LoggerFactory.getLogger(RestartNotificationDirectoryListener.class);
 
@@ -30,11 +31,11 @@ public class RestartNotificationDirectoryListener implements DirectoryChangeList
         }
     }
 
-    public void stop() {
-        restartNotifier.stop();
-        synchronized (eventQueue) {
-            eventQueue.notifyAll();
-        }
+  @Override
+  public void close() {
+    restartNotifier.stop();
+    synchronized (eventQueue) {
+      eventQueue.notifyAll();
     }
-
+  }
 }

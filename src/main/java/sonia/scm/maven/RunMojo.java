@@ -43,11 +43,13 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sonia.scm.maven.lr.LiveReloadLifeCycleListener;
+import sonia.scm.maven.lr.LiveReloadDirectoryListener;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -329,8 +331,7 @@ public class RunMojo extends AbstractPackagingMojo
    *
    * @throws MojoExecutionException
    */
-  private void runScmServer(PluginPathResolver pathResolver, File warFile) throws MojoExecutionException
-  {
+  private void runScmServer(PluginPathResolver pathResolver, File warFile) throws MojoExecutionException {
     ScmServer.ScmServerBuilder builder = ScmServer.builder(warFile.toPath(), scmHome.toPath())
             .withPort(port)
             .withContextPath(contextPath)
@@ -347,17 +348,39 @@ public class RunMojo extends AbstractPackagingMojo
     }
 
     if (restartNotifier) {
-      logger.info("install restart notifier");
-      long timeout = TimeUnit.SECONDS.toMillis(restartWaitTimeout);
-      builder.withListener(
-          new RestartNotificationLifeCycleListener(pathResolver, contextPath + restartPath, timeout)
-      );
-    }
+      logger.info("install hot reloading components");
 
-    builder.withListener(new LiveReloadLifeCycleListener(pathResolver));
+      FileWatcher watcher = new FileWatcher();
+      registerRestartNotificationListener(watcher, pathResolver);
+      registerLiveReloadListener(watcher, pathResolver);
+
+      builder.withListener(watcher);
+    }
 
     ScmServer server = builder.build();
     server.start();
+  }
+
+  private void registerLiveReloadListener(FileWatcher watcher, PluginPathResolver pathResolver) {
+    watcher.register(new LiveReloadDirectoryListener(), pathResolver.getWebApp().getSource());
+  }
+
+  private void registerRestartNotificationListener(FileWatcher watcher, PluginPathResolver pathResolver) throws MojoExecutionException {
+    long timeout = TimeUnit.SECONDS.toMillis(restartWaitTimeout);
+    URL restartUrl = createRestartURL();
+    watcher.register(
+      new RestartNotificationDirectoryListener(restartUrl, timeout),
+      pathResolver.getClasses().getSource(),
+      pathResolver.getLib().getSource()
+    );
+  }
+
+  private URL createRestartURL() throws MojoExecutionException {
+    try {
+      return new URL("http://localhost:" + port + contextPath + restartPath);
+    } catch (MalformedURLException ex) {
+      throw new MojoExecutionException("failed to create restart url", ex);
+    }
   }
 
   private boolean isOpenBrowserListenerEnabled() {
