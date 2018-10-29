@@ -363,6 +363,7 @@ public class RunMojo extends AbstractPackagingMojo
     server.start();
   }
 
+  @SuppressWarnings("squid:S3725") // Files.exists is to slow, but this is not critical in this case
   private void registerStaticFileListener(FileWatcher watcher, PluginPathResolver pathResolver) {
     if (Files.exists(pathResolver.getWebAppSourceDirectory())) {
       watcher.register(
@@ -374,6 +375,7 @@ public class RunMojo extends AbstractPackagingMojo
     }
   }
 
+  @SuppressWarnings("squid:S3725") // Files.exists is to slow, but this is not critical in this case
   private void registerLiveReloadListener(FileWatcher watcher, PluginPathResolver pathResolver) {
     if (Files.exists(pathResolver.getWebApp().getSource())) {
       watcher.register(new LiveReloadDirectoryListener(), pathResolver.getWebApp().getSource());

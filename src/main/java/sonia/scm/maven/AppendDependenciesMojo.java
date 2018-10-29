@@ -186,9 +186,7 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
    * @throws TransformerException
    */
   private void rewritePluginDescriptor(File descriptor,
-    Set<ArtifactItem> dependencies)
-    throws SAXException, IOException, ParserConfigurationException,
-    TransformerConfigurationException, TransformerException
+    Set<ArtifactItem> dependencies) throws SAXException, IOException, ParserConfigurationException, TransformerException
   {
     DocumentBuilder builder =
       DocumentBuilderFactory.newInstance().newDocumentBuilder();

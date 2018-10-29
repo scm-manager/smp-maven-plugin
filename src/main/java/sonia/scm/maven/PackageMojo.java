@@ -39,29 +39,18 @@ import org.apache.maven.archiver.MavenArchiver;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
-
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.jar.JarArchiver;
 import org.codehaus.plexus.archiver.jar.ManifestException;
-import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-//~--- JDK imports ------------------------------------------------------------
 
 import java.io.File;
 import java.io.IOException;
-
 import java.util.Set;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
@@ -74,14 +63,6 @@ import java.util.Set;
 )
 public class PackageMojo extends AbstractPackagingMojo
 {
-
-  /**
-   * the logger for PackageMojo
-   */
-  private static final Logger logger =
-    LoggerFactory.getLogger(PackageMojo.class);
-
-  //~--- set methods ----------------------------------------------------------
 
   /**
    * Method description
@@ -103,17 +84,6 @@ public class PackageMojo extends AbstractPackagingMojo
   public void setBuildDirectory(File buildDirectory)
   {
     this.buildDirectory = buildDirectory;
-  }
-
-  /**
-   * Method description
-   *
-   *
-   * @param classesDirectory
-   */
-  public void setClassesDirectory(File classesDirectory)
-  {
-    this.classesDirectory = classesDirectory;
   }
 
   /**
@@ -175,14 +145,6 @@ public class PackageMojo extends AbstractPackagingMojo
       packageWar(descriptor);
       packageJar(descriptor);
     }
-    catch (DependencyGraphBuilderException ex)
-    {
-      throw new MojoExecutionException("could not build dependency graph", ex);
-    }
-    catch (NoSuchArchiverException ex)
-    {
-      throw new MojoExecutionException("unable to find archiver", ex);
-    }
     catch (ArchiverException | IOException ex)
     {
       throw new MojoExecutionException("could not create archive", ex);
@@ -194,25 +156,8 @@ public class PackageMojo extends AbstractPackagingMojo
     }
   }
 
-  /**
-   * Method description
-   *
-   *
-   *
-   * @param descriptor
-   * @throws ArchiverException
-   * @throws DependencyResolutionRequiredException
-   * @throws IOException
-   * @throws ManifestException
-   * @throws MojoFailureException
-   * @throws NoSuchArchiverException
-   */
-  private void packageJar(File descriptor)
-    throws NoSuchArchiverException, MojoFailureException, ArchiverException,
-    ManifestException, IOException, DependencyResolutionRequiredException
-  {
-    if (isDirectory(classesDirectory))
-    {
+  private void packageJar(File descriptor) throws ManifestException, IOException, DependencyResolutionRequiredException {
+    if (isDirectory(classesDirectory)) {
       archiver.addDirectory(classesDirectory);
     }
 
@@ -228,25 +173,8 @@ public class PackageMojo extends AbstractPackagingMojo
     helper.attachArtifact(project, "jar", outputClassesPackage);
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param descriptor
-   *
-   * @throws ArchiverException
-   * @throws DependencyGraphBuilderException
-   * @throws DependencyResolutionRequiredException
-   * @throws IOException
-   * @throws ManifestException
-   * @throws MojoExecutionException
-   * @throws MojoFailureException
-   * @throws NoSuchArchiverException
-   */
-  private void packageWar(File descriptor)
-    throws NoSuchArchiverException, MojoFailureException, ArchiverException,
-    ManifestException, IOException, DependencyResolutionRequiredException,
-    MojoExecutionException, DependencyGraphBuilderException
+  private void packageWar(File descriptor) throws ManifestException, IOException,
+    DependencyResolutionRequiredException, MojoExecutionException
   {
     Set<ArtifactItem> items = SmpDependencyCollector.collect(project);
 

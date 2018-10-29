@@ -20,6 +20,9 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkState;
 
+/**
+ * Watches directories for changes and notifies registered listeners.
+ */
 public class FileWatcher implements DirectoryChangeListener, ScmServerListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(FileWatcher.class);
@@ -27,9 +30,17 @@ public class FileWatcher implements DirectoryChangeListener, ScmServerListener {
   private final Set<Listener> listeners = Sets.newHashSet();
   private DirectoryWatcher watcher;
 
-
-  public FileWatcher register(DirectoryChangeListener listener, Path path, Path... paths) {
-    listeners.add(new Listener(listener, Lists.asList(path, paths)));
+  /**
+   * Register new directory change listener.
+   *
+   * @param changeListener directory change listener
+   * @param path path to watch
+   * @param paths additional paths to watch
+   *
+   * @return {@code this}
+   */
+  public FileWatcher register(DirectoryChangeListener changeListener, Path path, Path... paths) {
+    listeners.add(new Listener(changeListener, Lists.asList(path, paths)));
     return this;
   }
 
@@ -66,11 +77,11 @@ public class FileWatcher implements DirectoryChangeListener, ScmServerListener {
   }
 
   private void closeIfRequired(Listener listener) {
-    if (listener.listener instanceof Closeable) {
+    if (listener.changeListener instanceof Closeable) {
       try {
-        ((Closeable) listener.listener).close();
+        ((Closeable) listener.changeListener).close();
       } catch (IOException ex) {
-        LOG.warn("failed to close listener " + listener.getName(), ex);
+        LOG.warn("failed to close changeListener " + listener.getName(), ex);
       }
     }
   }
@@ -86,8 +97,8 @@ public class FileWatcher implements DirectoryChangeListener, ScmServerListener {
   private void callListenerIfPathMatches(Listener listener, DirectoryChangeEvent event) throws IOException {
     Path changedPath = event.path();
     if (isAnyStaringWith(listener.paths, changedPath)) {
-      LOG.info("call listener {}, because path {} changed", listener.getName(), changedPath);
-      listener.listener.onEvent(event);
+      LOG.info("call changeListener {}, because path {} changed", listener.getName(), changedPath);
+      listener.changeListener.onEvent(event);
     }
   }
 
@@ -103,15 +114,15 @@ public class FileWatcher implements DirectoryChangeListener, ScmServerListener {
   private static class Listener {
 
     private Collection<Path> paths;
-    private DirectoryChangeListener listener;
+    private DirectoryChangeListener changeListener;
 
-    private Listener(DirectoryChangeListener listener, Collection<Path> paths) {
-      this.listener = listener;
+    private Listener(DirectoryChangeListener changeListener, Collection<Path> paths) {
+      this.changeListener = changeListener;
       this.paths = paths;
     }
 
     public String getName() {
-      return listener.getClass().toString();
+      return changeListener.getClass().toString();
     }
   }
 

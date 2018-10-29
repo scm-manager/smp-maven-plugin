@@ -2,6 +2,8 @@ package sonia.scm.maven;
 
 import io.methvin.watcher.DirectoryChangeEvent;
 import io.methvin.watcher.DirectoryChangeListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,6 +14,8 @@ import java.nio.file.StandardCopyOption;
  * Synchronizes two directories on every change.
  */
 public class StaticFileListener implements DirectoryChangeListener {
+
+  private static final Logger LOG = LoggerFactory.getLogger(StaticFileListener.class);
 
   private Path sourceDirectory;
   private Path targetDirectory;
@@ -35,6 +39,9 @@ public class StaticFileListener implements DirectoryChangeListener {
         break;
       case DELETE:
         delete(target);
+        break;
+      case OVERFLOW:
+        LOG.warn("received overflow event for path {}", source);
         break;
     }
   }
