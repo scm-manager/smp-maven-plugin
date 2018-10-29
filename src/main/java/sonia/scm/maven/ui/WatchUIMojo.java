@@ -9,7 +9,7 @@ public class WatchUIMojo extends AbstractUIMojo {
 
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
-    executeScript("test", true);
+    executeScript("watch", true);
   }
 
 }
