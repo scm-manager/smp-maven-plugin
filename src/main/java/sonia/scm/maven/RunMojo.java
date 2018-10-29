@@ -50,6 +50,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -212,7 +213,7 @@ public class RunMojo extends AbstractPackagingMojo
     }
 
     PluginPathResolver pathResolver = new PluginPathResolver(
-            classesDirectory.toPath(), packageDirectory.toPath(), exploded.toPath()
+          classesDirectory.toPath(), webappSourceDirectory.toPath(), packageDirectory.toPath(), exploded.toPath()
     );
 
     try
@@ -353,6 +354,7 @@ public class RunMojo extends AbstractPackagingMojo
       FileWatcher watcher = new FileWatcher();
       registerRestartNotificationListener(watcher, pathResolver);
       registerLiveReloadListener(watcher, pathResolver);
+      registerStaticFileListener(watcher, pathResolver);
 
       builder.withListener(watcher);
     }
@@ -361,8 +363,23 @@ public class RunMojo extends AbstractPackagingMojo
     server.start();
   }
 
+  private void registerStaticFileListener(FileWatcher watcher, PluginPathResolver pathResolver) {
+    if (Files.exists(pathResolver.getWebAppSourceDirectory())) {
+      watcher.register(
+        new StaticFileListener(pathResolver.getWebAppSourceDirectory(), pathResolver.getWebApp().getSource()),
+        pathResolver.getWebAppSourceDirectory()
+      );
+    } else {
+      logger.warn("skip register of static file listener, because webapp directory does not exists");
+    }
+  }
+
   private void registerLiveReloadListener(FileWatcher watcher, PluginPathResolver pathResolver) {
-    watcher.register(new LiveReloadDirectoryListener(), pathResolver.getWebApp().getSource());
+    if (Files.exists(pathResolver.getWebApp().getSource())) {
+      watcher.register(new LiveReloadDirectoryListener(), pathResolver.getWebApp().getSource());
+    } else {
+      logger.warn("skip register of live reload listener, because of target web directory does not exists");
+    }
   }
 
   private void registerRestartNotificationListener(FileWatcher watcher, PluginPathResolver pathResolver) throws MojoExecutionException {
@@ -429,6 +446,9 @@ public class RunMojo extends AbstractPackagingMojo
 
   @Parameter(property = "smp.restart.timeout", defaultValue = "1")
   private long restartWaitTimeout = 1;
+
+  @Parameter(defaultValue = "src/main/webapp")
+  private File webappSourceDirectory;
 
   @Parameter(defaultValue = "${project.build.directory}/${project.artifactId}-${project.version}")
   private File packageDirectory;

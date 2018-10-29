@@ -10,11 +10,13 @@ public final class PluginPathResolver {
     private static final String DIRECTORY_METAINF = "META-INF";
 
     private final Path classesCompileDirectory;
+    private final Path webAppSourceDirectory;
     private final Path packageDirectory;
     private final Path installationDirectory;
 
-    public PluginPathResolver(Path classesCompileDirectory, Path packageDirectory, Path installationDirectory) {
+    public PluginPathResolver(Path classesCompileDirectory, Path webAppSourceDirectory, Path packageDirectory, Path installationDirectory) {
         this.classesCompileDirectory = classesCompileDirectory;
+        this.webAppSourceDirectory = webAppSourceDirectory;
         this.packageDirectory = packageDirectory;
         this.installationDirectory = installationDirectory;
     }
@@ -26,6 +28,15 @@ public final class PluginPathResolver {
      */
     public Path getClassesCompileDirectory() {
         return classesCompileDirectory;
+    }
+
+    /**
+     * Returns the source directory for webapp files, normally src/main/webapp.
+     *
+     * @return webapp source directory
+     */
+    public Path getWebAppSourceDirectory() {
+      return webAppSourceDirectory;
     }
 
     /**
