@@ -5,7 +5,7 @@
 
   <groupId>sonia.scm.maven</groupId>
   <artifactId>smp-maven-plugin</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0-alpha-4</version>
   <packaging>maven-plugin</packaging>
   <description>
     Maven packaging for SCM-Manager 2.x plugins.
@@ -33,7 +33,7 @@
     <connection>scm:hg:https://bitbucket.org/sdorra/smp-maven-plugin</connection>
     <developerConnection>scm:hg:ssh://hg@bitbucket.org/sdorra/smp-maven-plugin/</developerConnection>
     <url>https://bitbucket.org/sdorra/smp-maven-plugin</url>
-    <tag>HEAD</tag>
+    <tag>1.0.0-alpha-4</tag>
   </scm>
 
   <issueManagement>
