@@ -52,7 +52,7 @@ public class FileWatcher implements DirectoryChangeListener, ScmServerListener {
       .flatMap(listener -> listener.paths.stream())
       .collect(Collectors.toList());
 
-    paths.stream().forEach(p -> LOG.info("wautch directory {} for changes", p));
+    paths.forEach(p -> LOG.info("watch directory {} for changes", p));
 
     watcher = DirectoryWatcher.builder()
       .paths(paths)
