@@ -208,7 +208,7 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
       {
         Element dependencyEl = doc.createElement(ELEMENT_DEPENDENCY);
 
-        dependencyEl.setTextContent(item.getId());
+        dependencyEl.setTextContent(item.getArtifactId());
         dependenciesEl.appendChild(dependencyEl);
       }
     }

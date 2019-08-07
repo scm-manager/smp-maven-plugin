@@ -133,8 +133,7 @@ public class ArtifactItem
    */
   public boolean isSelf(MavenProject project)
   {
-    return project.getGroupId().equals(groupId)
-      && project.getArtifactId().equals(artifactId);
+    return project.getArtifactId().equals(artifactId);
   }
 
   //~--- set methods ----------------------------------------------------------

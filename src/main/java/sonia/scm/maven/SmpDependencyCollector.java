@@ -72,10 +72,7 @@ public final class SmpDependencyCollector
   protected static final String PLUGIN_DESCRIPTOR = "META-INF/scm/plugin.xml";
 
   /** Field description */
-  private static final String ELEMENT_ARTIFACTID = "artifactId";
-
-  /** Field description */
-  private static final String ELEMENT_GROUPID = "groupId";
+  private static final String ELEMENT_artifactId = "artifactId";
 
   /** Field description */
   private static final String ELEMENT_INFORMATION = "information";
@@ -243,8 +240,7 @@ public final class SmpDependencyCollector
    */
   private ArtifactItem parseInformationNode(Node informationNode)
   {
-    String groupid = null;
-    String artifactid = null;
+    String artifactId = null;
     String version = null;
 
     NodeList nodeList = informationNode.getChildNodes();
@@ -253,13 +249,9 @@ public final class SmpDependencyCollector
     {
       Node node = nodeList.item(i);
 
-      if (isElement(node, ELEMENT_GROUPID))
+      if (isElement(node, ELEMENT_artifactId))
       {
-        groupid = node.getTextContent();
-      }
-      else if (isElement(node, ELEMENT_ARTIFACTID))
-      {
-        artifactid = node.getTextContent();
+        artifactId = node.getTextContent();
       }
       else if (isElement(node, ELEMENT_VERSION))
       {
@@ -267,13 +259,13 @@ public final class SmpDependencyCollector
       }
     }
 
-    if ((groupid == null) || (artifactid == null))
+    if (artifactId == null)
     {
       throw new RuntimeException(
-        "descriptor does not contain groupid or artifactid");
+        "descriptor does not contain artifactId");
     }
 
-    return new ArtifactItem(groupid, artifactid, version, TYPE);
+    return new ArtifactItem("", artifactId, version, TYPE);
   }
 
   //~--- get methods ----------------------------------------------------------

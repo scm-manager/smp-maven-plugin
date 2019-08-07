@@ -251,14 +251,8 @@ public class RunMojo extends AbstractPackagingMojo
    * @param artifact
    * @return
    */
-  private String createPluginPath(Artifact artifact)
-  {
-    StringBuilder path = new StringBuilder();
-
-    path.append(File.separator).append(artifact.getGroupId());
-    path.append(File.separator).append(artifact.getArtifactId());
-
-    return path.toString();
+  private String createPluginPath(Artifact artifact) {
+    return artifact.getArtifactId();
   }
 
   /**
