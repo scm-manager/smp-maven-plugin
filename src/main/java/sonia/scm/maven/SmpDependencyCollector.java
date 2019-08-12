@@ -72,7 +72,7 @@ public final class SmpDependencyCollector
   protected static final String PLUGIN_DESCRIPTOR = "META-INF/scm/plugin.xml";
 
   /** Field description */
-  private static final String ELEMENT_artifactId = "artifactId";
+  private static final String ELEMENT_NAME = "name";
 
   /** Field description */
   private static final String ELEMENT_INFORMATION = "information";
@@ -240,7 +240,7 @@ public final class SmpDependencyCollector
    */
   private ArtifactItem parseInformationNode(Node informationNode)
   {
-    String artifactId = null;
+    String name = null;
     String version = null;
 
     NodeList nodeList = informationNode.getChildNodes();
@@ -249,9 +249,9 @@ public final class SmpDependencyCollector
     {
       Node node = nodeList.item(i);
 
-      if (isElement(node, ELEMENT_artifactId))
+      if (isElement(node, ELEMENT_NAME))
       {
-        artifactId = node.getTextContent();
+        name = node.getTextContent();
       }
       else if (isElement(node, ELEMENT_VERSION))
       {
@@ -259,13 +259,13 @@ public final class SmpDependencyCollector
       }
     }
 
-    if (artifactId == null)
+    if (name == null)
     {
       throw new RuntimeException(
-        "descriptor does not contain artifactId");
+        "descriptor does not contain name");
     }
 
-    return new ArtifactItem("", artifactId, version, TYPE);
+    return new ArtifactItem("", name, version, TYPE);
   }
 
   //~--- get methods ----------------------------------------------------------
