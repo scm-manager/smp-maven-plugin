@@ -77,7 +77,7 @@ public abstract class AbstractUIMojo extends AbstractMojo {
     Plugin plugin = new Plugin();
     plugin.setArtifactId("buildfrontend-maven-plugin");
     plugin.setGroupId("com.github.sdorra");
-    plugin.setVersion("2.2.0");
+    plugin.setVersion("2.3.0");
 
 
     List<MojoExecutor.Element> elements = new ArrayList<>();
@@ -107,14 +107,14 @@ public abstract class AbstractUIMojo extends AbstractMojo {
 
   private MojoExecutor.Element createNodeConfiguration() {
     return element("nodeConfiguration",
-      element("version", "8.11.4")
+      element("version", "10.16.0")
     );
   }
 
   private MojoExecutor.Element createPackageManagerConfiguration() {
     return element("packageManagerConfiguration",
       element("type", "YARN"),
-      element("version", "1.9.4")
+      element("version", "1.16.0")
     );
   }
 
