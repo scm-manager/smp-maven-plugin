@@ -77,7 +77,7 @@ public abstract class AbstractUIMojo extends AbstractMojo {
     Plugin plugin = new Plugin();
     plugin.setArtifactId("buildfrontend-maven-plugin");
     plugin.setGroupId("com.github.sdorra");
-    plugin.setVersion("2.3.1");
+    plugin.setVersion("2.2.0");
 
 
     List<MojoExecutor.Element> elements = new ArrayList<>();
