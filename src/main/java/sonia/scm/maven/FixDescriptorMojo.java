@@ -1,19 +1,19 @@
 /**
  * Copyright (c) 2014, Sebastian Sdorra
  * All rights reserved.
- *
+ * <p>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * <p>
  * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
+ * this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  * 3. Neither the name of SCM-Manager; nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -24,10 +24,9 @@
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * <p>
  * https://bitbucket.org/sdorra/smp-maven-plugin
  */
-
 
 
 package sonia.scm.maven;
@@ -37,7 +36,6 @@ package sonia.scm.maven;
 import com.google.common.base.Strings;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -64,74 +62,34 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-/**
- *
- * @author Sebastian Sdorra
- */
 @Mojo(name = "fix-descriptor", defaultPhase = LifecyclePhase.PROCESS_RESOURCES)
-public class FixDescriptorMojo extends AbstractDescriptorMojo
-{
+public class FixDescriptorMojo extends AbstractDescriptorMojo {
 
-  /** Field description */
   private static final String SCM_VERSION = "2";
 
-  //~--- methods --------------------------------------------------------------
+  @Component
+  private MavenProject project;
 
-  /**
-   * Method description
-   *
-   *
-   *
-   * @param descriptor
-   * @throws MojoExecutionException
-   * @throws MojoFailureException
-   */
   @Override
   protected void execute(File descriptor)
-    throws MojoExecutionException, MojoFailureException
-  {
-    if (descriptor.exists() && descriptor.isFile())
-    {
+    throws MojoExecutionException {
+    if (descriptor.exists() && descriptor.isFile()) {
       Document document = createDocument(descriptor);
 
       fixDescriptor(document);
       writeDocument(descriptor, document);
-    }
-    else
-    {
+    } else {
       getLog().warn("no plugin descriptor found, skipping fix-descriptor goal");
     }
   }
 
-  //~--- set methods ----------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @param project
-   */
-  public void setProject(MavenProject project)
-  {
+  public void setProject(MavenProject project) {
     this.project = project;
   }
 
-  //~--- methods --------------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @param document
-   * @param parent
-   * @param name
-   * @param value
-   */
   private void appendNode(Document document, Node parent, String name,
-    String value)
-  {
-    if (value != null)
-    {
+                          String value) {
+    if (value != null) {
       Element node = document.createElement(name);
 
       node.setTextContent(value);
@@ -139,42 +97,21 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
     }
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param descriptor
-   *
-   * @return
-   *
-   * @throws MojoExecutionException
-   */
-  private Document createDocument(File descriptor) throws MojoExecutionException
-  {
+  private Document createDocument(File descriptor) throws MojoExecutionException {
     Document document = null;
 
-    try
-    {
+    try {
       document =
         DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
           descriptor);
-    }
-    catch (IOException | ParserConfigurationException | SAXException ex)
-    {
+    } catch (IOException | ParserConfigurationException | SAXException ex) {
       throw new MojoExecutionException("could not parse plugin descriptor", ex);
     }
 
     return document;
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param document
-   */
-  private void fixDescriptor(Document document)
-  {
+  private void fixDescriptor(Document document) {
     Element rootElement = document.getDocumentElement();
 
     fixRootElement(document, rootElement);
@@ -183,20 +120,17 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
       rootElement.getElementsByTagName("information");
     Node informationNode = null;
 
-    for (int i = 0; i < informationNodeList.getLength(); i++)
-    {
+    for (int i = 0; i < informationNodeList.getLength(); i++) {
       Node node = informationNodeList.item(i);
 
-      if ("information".equals(node.getNodeName()))
-      {
+      if ("information".equals(node.getNodeName())) {
         informationNode = node;
 
         break;
       }
     }
 
-    if (informationNode == null)
-    {
+    if (informationNode == null) {
       informationNode = document.createElement("information");
       rootElement.appendChild(informationNode);
     }
@@ -204,17 +138,7 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
     fixDescriptorInformations(document, informationNode);
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param document
-   * @param informationNode
-   */
-  private void fixDescriptorInformations(Document document,
-    Node informationNode)
-  {
-    boolean groupId = false;
+  private void fixDescriptorInformations(Document document, Node informationNode) {
     boolean artifactId = false;
     boolean version = false;
     boolean name = false;
@@ -223,46 +147,38 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
     boolean author = false;
     NodeList children = informationNode.getChildNodes();
 
-    for (int i = 0; i < children.getLength(); i++)
-    {
+    for (int i = 0; i < children.getLength(); i++) {
       Node node = children.item(i);
       String nodeName = node.getNodeName();
 
-      if (!Strings.isNullOrEmpty(nodeName))
-      {
-        switch (nodeName)
-        {
-          case "groupId" :
-            groupId = true;
-
-            break;
-
-          case "artifactId" :
+      if (!Strings.isNullOrEmpty(nodeName)) {
+        switch (nodeName) {
+          case "artifactId":
             artifactId = true;
 
             break;
 
-          case "version" :
+          case "version":
             version = true;
 
             break;
 
-          case "name" :
+          case "name":
             name = true;
 
             break;
 
-          case "url" :
+          case "url":
             url = true;
 
             break;
 
-          case "description" :
+          case "description":
             description = true;
 
             break;
 
-          case "author" :
+          case "author":
             author = true;
 
             break;
@@ -270,34 +186,26 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
       }
     }
 
-    if (!groupId)
-    {
-      appendNode(document, informationNode, "groupId", project.getGroupId());
-    }
-
-    if (!artifactId)
-    {
-      appendNode(document, informationNode, "artifactId",
+    // Map artifactId to name
+    if (!artifactId) {
+      appendNode(document, informationNode, "name",
         project.getArtifactId());
     }
 
-    if (!version)
-    {
+    if (!version) {
       appendNode(document, informationNode, "version", project.getVersion());
     }
 
-    if (!name)
-    {
-      appendNode(document, informationNode, "name", project.getName());
+    // Map name to displayName
+    if (!name) {
+      appendNode(document, informationNode, "displayName", project.getName());
     }
 
-    if (!url)
-    {
+    if (!url) {
       appendNode(document, informationNode, "url", project.getUrl());
     }
 
-    if (!description)
-    {
+    if (!description) {
       appendNode(document, informationNode, "description",
         project.getDescription());
     }
@@ -305,28 +213,17 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
     // TODO handle author node
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param document
-   * @param rootElement
-   */
-  private void fixRootElement(Document document, Element rootElement)
-  {
+  private void fixRootElement(Document document, Element rootElement) {
     NodeList children = rootElement.getChildNodes();
     boolean scmVersion = false;
 
-    for (int i = 0; i < children.getLength(); i++)
-    {
+    for (int i = 0; i < children.getLength(); i++) {
       Node node = children.item(i);
       String nodeName = node.getNodeName();
 
-      if (!Strings.isNullOrEmpty(nodeName))
-      {
-        switch (nodeName)
-        {
-          case "scm-version" :
+      if (!Strings.isNullOrEmpty(nodeName)) {
+        switch (nodeName) {
+          case "scm-version":
             scmVersion = true;
 
             break;
@@ -334,8 +231,7 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
       }
     }
 
-    if (!scmVersion)
-    {
+    if (!scmVersion) {
       Element scmVersionEl = document.createElement("scm-version");
 
       scmVersionEl.setTextContent(SCM_VERSION);
@@ -343,37 +239,17 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo
     }
   }
 
-  /**
-   * Method description
-   *
-   *
-   *
-   * @param descriptor
-   * @param document
-   *
-   * @throws MojoExecutionException
-   */
   private void writeDocument(File descriptor, Document document)
-    throws MojoExecutionException
-  {
-    try
-    {
+    throws MojoExecutionException {
+    try {
       Transformer transformer =
         TransformerFactory.newInstance().newTransformer();
 
       transformer.setOutputProperty(OutputKeys.INDENT, "yes");
       transformer.transform(new DOMSource(document),
         new StreamResult(descriptor));
-    }
-    catch (IllegalArgumentException | TransformerException ex)
-    {
+    } catch (IllegalArgumentException | TransformerException ex) {
       throw new MojoExecutionException("could not write plugin descriptor", ex);
     }
   }
-
-  //~--- fields ---------------------------------------------------------------
-
-  /** Field description */
-  @Component
-  private MavenProject project;
 }
