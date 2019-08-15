@@ -207,10 +207,11 @@ public class RunMojo extends AbstractPackagingMojo
     // TODO transitive smp dependencies
     Set<ArtifactItem> smps = SmpDependencyCollector.collect(project);
 
-    for (ArtifactItem smp : smps)
-    {
-      install(pluginDirectory, smp);
-    }
+    // Deactivated to prevent errors / may cause crazy behaviour
+    //    for (ArtifactItem smp : smps)
+    //    {
+    //      install(pluginDirectory, smp);
+    //    }
 
     PluginPathResolver pathResolver = new PluginPathResolver(
           classesDirectory.toPath(), webappSourceDirectory.toPath(), packageDirectory.toPath(), exploded.toPath()
