@@ -33,8 +33,10 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
+import org.apache.maven.model.Developer;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -52,6 +54,7 @@ import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -116,8 +119,7 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo {
 
     fixRootElement(document, rootElement);
 
-    NodeList informationNodeList =
-      rootElement.getElementsByTagName("information");
+    NodeList informationNodeList = rootElement.getElementsByTagName("information");
     Node informationNode = null;
 
     for (int i = 0; i < informationNodeList.getLength(); i++) {
@@ -135,82 +137,44 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo {
       rootElement.appendChild(informationNode);
     }
 
-    fixDescriptorInformations(document, informationNode);
+    fixPluginInformation(document, informationNode);
   }
 
-  private void fixDescriptorInformations(Document document, Node informationNode) {
-    boolean artifactId = false;
-    boolean version = false;
-    boolean name = false;
-    boolean url = false;
-    boolean description = false;
-    boolean author = false;
-    NodeList children = informationNode.getChildNodes();
+  @VisibleForTesting
+  void fixPluginInformation(Document document, Node informationNode) {
+    // Map artifactId to name
+    appendIfNotExists(document, informationNode, "name", project.getArtifactId());
+    appendIfNotExists(document, informationNode, "version", project.getVersion());
+    // Map name to displayName
+    appendIfNotExists(document, informationNode, "displayName", project.getName());
+    appendIfNotExists(document, informationNode, "description", project.getDescription());
+    appendIfNotExists(document, informationNode, "author", getFirstDeveloper());
+  }
 
+  private void appendIfNotExists(Document document, Node informationNode, String name, String artifactId) {
+    if (!hasChild(informationNode, name)) {
+      appendNode(document, informationNode, name, artifactId);
+    }
+  }
+
+  private String getFirstDeveloper() {
+    List<Developer> developers = project.getDevelopers();
+    if (developers != null && !developers.isEmpty()) {
+      return developers.get(0).getName();
+    }
+    return null;
+  }
+
+  private boolean hasChild(Node parent, String name) {
+    NodeList children = parent.getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
-      Node node = children.item(i);
-      String nodeName = node.getNodeName();
+      Node child = children.item(i);
 
-      if (!Strings.isNullOrEmpty(nodeName)) {
-        switch (nodeName) {
-          case "artifactId":
-            artifactId = true;
-
-            break;
-
-          case "version":
-            version = true;
-
-            break;
-
-          case "name":
-            name = true;
-
-            break;
-
-          case "url":
-            url = true;
-
-            break;
-
-          case "description":
-            description = true;
-
-            break;
-
-          case "author":
-            author = true;
-
-            break;
-        }
+      if (name.equals(child.getNodeName())) {
+        return true;
       }
     }
-
-    // Map artifactId to name
-    if (!artifactId) {
-      appendNode(document, informationNode, "name",
-        project.getArtifactId());
-    }
-
-    if (!version) {
-      appendNode(document, informationNode, "version", project.getVersion());
-    }
-
-    // Map name to displayName
-    if (!name) {
-      appendNode(document, informationNode, "displayName", project.getName());
-    }
-
-    if (!url) {
-      appendNode(document, informationNode, "url", project.getUrl());
-    }
-
-    if (!description) {
-      appendNode(document, informationNode, "description",
-        project.getDescription());
-    }
-
-    // TODO handle author node
+    return false;
   }
 
   private void fixRootElement(Document document, Element rootElement) {
