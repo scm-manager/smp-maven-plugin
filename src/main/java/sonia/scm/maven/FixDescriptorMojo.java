@@ -34,114 +34,64 @@ package sonia.scm.maven;
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
-
 import org.apache.maven.model.Developer;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.project.MavenProject;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import org.xml.sax.SAXException;
-
-//~--- JDK imports ------------------------------------------------------------
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+import static sonia.scm.maven.XmlNodes.appendIfNotExists;
+
+//~--- JDK imports ------------------------------------------------------------
 
 @Mojo(name = "fix-descriptor", defaultPhase = LifecyclePhase.PROCESS_RESOURCES)
 public class FixDescriptorMojo extends AbstractDescriptorMojo {
 
   private static final String SCM_VERSION = "2";
+  private static final String ELEMENT_INFORMATION = "information";
 
   @Component
   private MavenProject project;
-
-  @Override
-  protected void execute(File descriptor)
-    throws MojoExecutionException {
-    if (descriptor.exists() && descriptor.isFile()) {
-      Document document = createDocument(descriptor);
-
-      fixDescriptor(document);
-      writeDocument(descriptor, document);
-    } else {
-      getLog().warn("no plugin descriptor found, skipping fix-descriptor goal");
-    }
-  }
 
   public void setProject(MavenProject project) {
     this.project = project;
   }
 
-  private void appendNode(Document document, Node parent, String name,
-                          String value) {
-    if (value != null) {
-      Element node = document.createElement(name);
+  @Override
+  protected void execute(File descriptor) throws MojoExecutionException {
+    if (descriptor.exists() && descriptor.isFile()) {
+      Document document = XmlNodes.createDocument(descriptor);
 
-      node.setTextContent(value);
-      parent.appendChild(node);
+      fixDescriptor(document);
+      XmlNodes.writeDocument(descriptor, document);
+    } else {
+      getLog().warn("no plugin descriptor found, skipping fix-descriptor goal");
     }
   }
 
-  private Document createDocument(File descriptor) throws MojoExecutionException {
-    Document document = null;
 
-    try {
-      document =
-        DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
-          descriptor);
-    } catch (IOException | ParserConfigurationException | SAXException ex) {
-      throw new MojoExecutionException("could not parse plugin descriptor", ex);
-    }
-
-    return document;
-  }
-
-  private void fixDescriptor(Document document) {
+  @VisibleForTesting
+  void fixDescriptor(Document document) {
     Element rootElement = document.getDocumentElement();
-
     fixRootElement(document, rootElement);
 
-    NodeList informationNodeList = rootElement.getElementsByTagName("information");
-    Node informationNode = null;
-
-    for (int i = 0; i < informationNodeList.getLength(); i++) {
-      Node node = informationNodeList.item(i);
-
-      if ("information".equals(node.getNodeName())) {
-        informationNode = node;
-
-        break;
-      }
-    }
-
+    Node informationNode = XmlNodes.getChild(rootElement, ELEMENT_INFORMATION);
     if (informationNode == null) {
-      informationNode = document.createElement("information");
+      informationNode = document.createElement(ELEMENT_INFORMATION);
       rootElement.appendChild(informationNode);
     }
 
     fixPluginInformation(document, informationNode);
   }
 
-  @VisibleForTesting
-  void fixPluginInformation(Document document, Node informationNode) {
+  private void fixPluginInformation(Document document, Node informationNode) {
     // Map artifactId to name
     appendIfNotExists(document, informationNode, "name", project.getArtifactId());
     appendIfNotExists(document, informationNode, "version", project.getVersion());
@@ -149,12 +99,6 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo {
     appendIfNotExists(document, informationNode, "displayName", project.getName());
     appendIfNotExists(document, informationNode, "description", project.getDescription());
     appendIfNotExists(document, informationNode, "author", getFirstDeveloper());
-  }
-
-  private void appendIfNotExists(Document document, Node informationNode, String name, String artifactId) {
-    if (!hasChild(informationNode, name)) {
-      appendNode(document, informationNode, name, artifactId);
-    }
   }
 
   private String getFirstDeveloper() {
@@ -165,55 +109,8 @@ public class FixDescriptorMojo extends AbstractDescriptorMojo {
     return null;
   }
 
-  private boolean hasChild(Node parent, String name) {
-    NodeList children = parent.getChildNodes();
-    for (int i = 0; i < children.getLength(); i++) {
-      Node child = children.item(i);
-
-      if (name.equals(child.getNodeName())) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   private void fixRootElement(Document document, Element rootElement) {
-    NodeList children = rootElement.getChildNodes();
-    boolean scmVersion = false;
-
-    for (int i = 0; i < children.getLength(); i++) {
-      Node node = children.item(i);
-      String nodeName = node.getNodeName();
-
-      if (!Strings.isNullOrEmpty(nodeName)) {
-        switch (nodeName) {
-          case "scm-version":
-            scmVersion = true;
-
-            break;
-        }
-      }
-    }
-
-    if (!scmVersion) {
-      Element scmVersionEl = document.createElement("scm-version");
-
-      scmVersionEl.setTextContent(SCM_VERSION);
-      rootElement.appendChild(scmVersionEl);
-    }
+    appendIfNotExists(document, rootElement, "scm-version", SCM_VERSION);
   }
 
-  private void writeDocument(File descriptor, Document document)
-    throws MojoExecutionException {
-    try {
-      Transformer transformer =
-        TransformerFactory.newInstance().newTransformer();
-
-      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      transformer.transform(new DOMSource(document),
-        new StreamResult(descriptor));
-    } catch (IllegalArgumentException | TransformerException ex) {
-      throw new MojoExecutionException("could not write plugin descriptor", ex);
-    }
-  }
 }

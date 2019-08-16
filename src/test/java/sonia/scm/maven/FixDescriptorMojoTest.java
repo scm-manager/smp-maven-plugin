@@ -1,8 +1,10 @@
 package sonia.scm.maven;
 
 import org.apache.maven.model.Developer;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,11 +13,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,13 +31,13 @@ class FixDescriptorMojoTest {
   private FixDescriptorMojo mojo;
 
   private Document document;
-  private Element information;
+  private Element plugin;
 
   @BeforeEach
   void setUpNodes() throws Exception {
     document = createDocument();
-    information = document.createElement("information");
-    document.appendChild(information);
+    plugin = document.createElement("plugin");
+    document.appendChild(plugin);
   }
 
   private void setUpProject() {
@@ -52,52 +52,79 @@ class FixDescriptorMojoTest {
   }
 
   @Test
-  void shouldAppendElements()  {
-    setUpProject();
+  void shouldAppendScmVersion() {
+    mojo.fixDescriptor(document);
 
-    mojo.fixPluginInformation(document, information);
-
-    verify( "name", "scm-cas-plugin");
-    verify( "version", "1.0.0");
-    verify( "displayName", "CAS");
-    verify( "description", "CAS Authentication");
-    verify( "author", "Sebastian Sdorra");
+    verify(document.getDocumentElement(), "scm-version", "2");
   }
 
   @Test
-  void shouldNotOverrideElements() {
-    appendNode("name", "scm-ldap-plugin");
-    appendNode("version", "2.0.0");
-    appendNode("displayName", "LDAP");
-    appendNode("description", "LDAP Authentication");
-    appendNode( "author", "Thorsten Ludewig");
+  void shouldAppendInformationIfNotExists() {
+    setUpProject();
 
-    mojo.fixPluginInformation(document, information);
+    mojo.fixDescriptor(document);
 
-    verify("name", "scm-ldap-plugin");
-    verify("version", "2.0.0");
-    verify("displayName", "LDAP");
-    verify("description", "LDAP Authentication");
-    verify( "author", "Thorsten Ludewig");
+    Node information = XmlNodes.getChild(document.getDocumentElement(), "information");
+    verify(information, "name", "scm-cas-plugin");
+    verify(information, "version", "1.0.0");
+    verify(information, "displayName", "CAS");
+    verify(information, "description", "CAS Authentication");
+    verify(information, "author", "Sebastian Sdorra");
   }
 
-  private void verify(String name, String expectedValue) {
-    NodeList elements = information.getElementsByTagName(name);
-    String value = null;
-    for (int i=0; i<elements.getLength(); i++) {
-      Node element = elements.item(i);
-      value = element.getTextContent();
+  @Nested
+  class WithInformationNode {
+
+    private Element information;
+
+    @BeforeEach
+    void setUpNodes() {
+      information = document.createElement("information");
+      plugin.appendChild(information);
     }
 
-    assertThat(expectedValue).isEqualTo(value);
+    @Test
+    void shouldAppendElements() {
+      setUpProject();
+
+      mojo.fixDescriptor(document);
+
+      verify(information, "name", "scm-cas-plugin");
+      verify(information, "version", "1.0.0");
+      verify(information, "displayName", "CAS");
+      verify(information, "description", "CAS Authentication");
+      verify(information, "author", "Sebastian Sdorra");
+    }
+
+    @Test
+    void shouldNotOverrideElements() {
+      appendNode(information, "name", "scm-ldap-plugin");
+      appendNode(information, "version", "2.0.0");
+      appendNode(information, "displayName", "LDAP");
+      appendNode(information, "description", "LDAP Authentication");
+      appendNode(information, "author", "Thorsten Ludewig");
+
+      mojo.fixDescriptor(document);
+
+      verify(information, "name", "scm-ldap-plugin");
+      verify(information, "version", "2.0.0");
+      verify(information, "displayName", "LDAP");
+      verify(information, "description", "LDAP Authentication");
+      verify(information, "author", "Thorsten Ludewig");
+    }
+
   }
 
+  private void verify(Node parent, String name, String expectedValue) {
+    Node child = XmlNodes.getChild(parent, name);
+    assertThat(child).isNotNull();
+    assertThat(child.getTextContent()).isEqualTo(expectedValue);
+  }
 
-
-  private void appendNode(String name, String value) {
+  private void appendNode(Node parent, String name, String value) {
     Element element = document.createElement(name);
     element.setTextContent(value);
-    information.appendChild(element);
+    parent.appendChild(element);
   }
 
   private Document createDocument() throws ParserConfigurationException {
