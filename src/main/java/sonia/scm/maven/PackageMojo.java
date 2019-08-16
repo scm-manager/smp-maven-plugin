@@ -176,7 +176,7 @@ public class PackageMojo extends AbstractPackagingMojo
   private void packageWar(File descriptor) throws ManifestException, IOException,
     DependencyResolutionRequiredException, MojoExecutionException
   {
-    Set<ArtifactItem> items = SmpDependencyCollector.collect(project);
+    Set<SmpArtifact> items = SmpDependencyCollector.collect(project);
 
     createExploded(buildDirectory, descriptor, items);
     archiver.addDirectory(buildDirectory);

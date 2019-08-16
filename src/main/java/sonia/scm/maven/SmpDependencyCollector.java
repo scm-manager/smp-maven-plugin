@@ -1,19 +1,19 @@
 /**
  * Copyright (c) 2014, Sebastian Sdorra
  * All rights reserved.
- *
+ * <p>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * <p>
  * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
+ * this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  * 3. Neither the name of SCM-Manager; nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -24,277 +24,106 @@
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * <p>
  * https://bitbucket.org/sdorra/smp-maven-plugin
  */
-
 
 
 package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import com.google.common.io.Closeables;
-
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import org.xml.sax.SAXException;
+import org.zeroturnaround.zip.ZipUtil;
 
-//~--- JDK imports ------------------------------------------------------------
-
-import java.io.IOException;
-import java.io.InputStream;
-
-import java.net.URL;
-
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+//~--- JDK imports ------------------------------------------------------------
 
 /**
  *
  * @author Sebastian Sdorra
  */
-public final class SmpDependencyCollector
-{
+public final class SmpDependencyCollector {
 
-  /** Field description */
-  protected static final String PLUGIN_DESCRIPTOR = "META-INF/scm/plugin.xml";
+  private static final Logger LOG = LoggerFactory.getLogger(SmpDependencyCollector.class);
 
-  /** Field description */
-  private static final String ELEMENT_ARTIFACTID = "artifactId";
-
-  /** Field description */
-  private static final String ELEMENT_GROUPID = "groupId";
-
-  /** Field description */
+  private static final String PLUGIN_DESCRIPTOR = "META-INF/scm/plugin.xml";
+  private static final String ELEMENT_NAME = "name";
   private static final String ELEMENT_INFORMATION = "information";
+  private final MavenProject project;
 
-  /** Field description */
-  private static final String ELEMENT_VERSION = "version";
-
-  /** Field description */
-  private static final String TYPE = "smp";
-
-  //~--- constructors ---------------------------------------------------------
-
-  /**
-   * Constructs ...
-   *
-   *
-   * @param project
-   */
-  private SmpDependencyCollector(MavenProject project)
-  {
+  private SmpDependencyCollector(MavenProject project) {
     this.project = project;
   }
 
-  //~--- methods --------------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @param project
-   *
-   * @return
-   *
-   * @throws MojoExecutionException
-   */
-  public static Set<ArtifactItem> collect(MavenProject project)
-    throws MojoExecutionException
-  {
+  public static Set<SmpArtifact> collect(MavenProject project) throws MojoExecutionException {
     return new SmpDependencyCollector(project).collectSmpDependencies();
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param dependencies
-   * @param url
-   *
-   * @throws IOException
-   * @throws ParserConfigurationException
-   * @throws SAXException
-   */
-  private void appendDependency(Set<ArtifactItem> dependencies, URL url)
-    throws ParserConfigurationException, SAXException, IOException
-  {
-    DocumentBuilder builder =
-      DocumentBuilderFactory.newInstance().newDocumentBuilder();
-    InputStream is = null;
-
-    try
-    {
-      is = url.openStream();
-
-      Document doc = builder.parse(is);
-
-      dependencies.add(parseDescriptor(doc));
-    }
-    finally
-    {
-      Closeables.close(is, true);
-    }
+  private Set<SmpArtifact> collectSmpDependencies() throws MojoExecutionException {
+    Set<Artifact> artifacts = findRuntimeArtifacts();
+    return filterAndMapSmpArtifacts(artifacts);
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @return
-   *
-   * @throws MojoExecutionException
-   */
-  private Set<ArtifactItem> collectSmpDependencies()
-    throws MojoExecutionException
-  {
-    Set<ArtifactItem> items = new HashSet<>();
-
-    try
-    {
-      ClassLoader classLoader = ClassLoaders.createRuntimeClassLoader(project);
-
-      collectSmpDependencies(classLoader, items);
-    }
-    catch (ParserConfigurationException | SAXException ex)
-    {
-      throw new MojoExecutionException("could not parse plugin descriptor", ex);
-    }
-    catch (DependencyResolutionRequiredException | IOException ex)
-    {
-      throw new MojoExecutionException("could not setup classloader", ex);
-    }
-
-    return items;
+  private Set<Artifact> findRuntimeArtifacts() {
+    return project.getArtifacts()
+      .stream()
+      .filter(a -> !isSelf(a))
+      .filter(a -> a.getArtifactHandler().isAddedToClasspath())
+      .filter(a -> Artifact.SCOPE_COMPILE.equals(a.getScope()) || Artifact.SCOPE_RUNTIME.equals(a.getScope()))
+      .filter(a -> a.getFile() != null)
+      .collect(Collectors.toSet());
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param classLoader
-   * @param dependencies
-   *
-   * @throws IOException
-   * @throws ParserConfigurationException
-   * @throws SAXException
-   */
-  private void collectSmpDependencies(ClassLoader classLoader,
-    Set<ArtifactItem> dependencies)
-    throws IOException, ParserConfigurationException, SAXException
-  {
-    Enumeration<URL> descriptors = classLoader.getResources(PLUGIN_DESCRIPTOR);
-
-    while (descriptors.hasMoreElements())
-    {
-      URL url = descriptors.nextElement();
-
-      appendDependency(dependencies, url);
-    }
+  private boolean isSelf(Artifact a) {
+    return a.getArtifactId().equals(project.getArtifactId())
+      && a.getGroupId().equals(project.getGroupId());
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param doc
-   *
-   * @return
-   */
-  private ArtifactItem parseDescriptor(Document doc)
-  {
-    ArtifactItem item = null;
-    NodeList nodeList = doc.getElementsByTagName(ELEMENT_INFORMATION);
-
-    for (int i = 0; i < nodeList.getLength(); i++)
-    {
-      Node node = nodeList.item(i);
-
-      if (isElement(node, ELEMENT_INFORMATION))
-      {
-        item = parseInformationNode(node);
-
-        break;
+  private Set<SmpArtifact> filterAndMapSmpArtifacts(Set<Artifact> artifacts) throws MojoExecutionException {
+    Set<SmpArtifact> smps = new HashSet<>();
+    for (Artifact artifact : artifacts) {
+      File file = artifact.getFile();
+      String name = getNameFromDescriptor(file);
+      if (name != null) {
+        LOG.debug("found smp dependency {}", name);
+        smps.add(new SmpArtifact(name, artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion()));
       }
     }
-
-    return item;
+    return smps;
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param informationNode
-   *
-   * @return
-   */
-  private ArtifactItem parseInformationNode(Node informationNode)
-  {
-    String groupid = null;
-    String artifactid = null;
-    String version = null;
-
-    NodeList nodeList = informationNode.getChildNodes();
-
-    for (int i = 0; i < nodeList.getLength(); i++)
-    {
-      Node node = nodeList.item(i);
-
-      if (isElement(node, ELEMENT_GROUPID))
-      {
-        groupid = node.getTextContent();
+  private String getNameFromDescriptor(File file) throws MojoExecutionException {
+    try {
+      byte[] bytes = ZipUtil.unpackEntry(file, PLUGIN_DESCRIPTOR);
+      if (bytes != null) {
+        Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(bytes));
+        Node information = XmlNodes.getChild(document.getDocumentElement(), ELEMENT_INFORMATION);
+        if (information != null) {
+          Node name = XmlNodes.getChild(information, ELEMENT_NAME);
+          if (name != null) {
+            return name.getTextContent();
+          }
+        }
       }
-      else if (isElement(node, ELEMENT_ARTIFACTID))
-      {
-        artifactid = node.getTextContent();
-      }
-      else if (isElement(node, ELEMENT_VERSION))
-      {
-        version = node.getTextContent();
-      }
+    } catch (SAXException | ParserConfigurationException | IOException e) {
+      throw new MojoExecutionException("failed to extract and parse descriptor from " + file, e);
     }
-
-    if ((groupid == null) || (artifactid == null))
-    {
-      throw new RuntimeException(
-        "descriptor does not contain groupid or artifactid");
-    }
-
-    return new ArtifactItem(groupid, artifactid, version, TYPE);
+    return null;
   }
-
-  //~--- get methods ----------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @param node
-   * @param name
-   *
-   * @return
-   */
-  private boolean isElement(Node node, String name)
-  {
-    return (node.getNodeType() == Node.ELEMENT_NODE)
-      && name.equals(node.getNodeName());
-  }
-
-  //~--- fields ---------------------------------------------------------------
-
-  /** Field description */
-  private final MavenProject project;
 }

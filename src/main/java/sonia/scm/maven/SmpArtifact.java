@@ -1,9 +1,9 @@
 /**
- * Copyright (c) 2014, Sebastian Sdorra All rights reserved.
- *
+ * Copyright (c) 2010, Sebastian Sdorra All rights reserved.
+ * <p>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * <p>
  * 1. Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer. 2. Redistributions in
  * binary form must reproduce the above copyright notice, this list of
@@ -11,7 +11,7 @@
  * materials provided with the distribution. 3. Neither the name of SCM-Manager;
  * nor the names of its contributors may be used to endorse or promote products
  * derived from this software without specific prior written permission.
- *
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -22,23 +22,33 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * <p>
  * http://bitbucket.org/sdorra/scm-manager
- *
  */
+
 
 package sonia.scm.maven;
 
-import lombok.Data;
+//~--- non-JDK imports --------------------------------------------------------
+
+import lombok.Value;
 
 /**
  *
  * @author Sebastian Sdorra
  */
-@Data
-public class WebApplication implements ArtifactItem {
-  private String groupId = "sonia.scm";
-  private String artifactId = "scm-webapp";
-  private String version;
-  private String type = "war";
+@Value
+class SmpArtifact implements ArtifactItem {
+
+  public static final String TYPE = "smp";
+
+  private final String pluginName;
+  private final String groupId;
+  private final String artifactId;
+  private final String version;
+
+  @Override
+  public String getType() {
+    return TYPE;
+  }
 }

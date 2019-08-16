@@ -251,7 +251,7 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
    *
    * @throws MojoExecutionException
    */
-  protected void copyDependencies(File libDirectory, Set<ArtifactItem> items)
+  protected void copyDependencies(File libDirectory, Set<SmpArtifact> items)
     throws MojoExecutionException
   {
     for (DependencyNode node : getDependencies(items))
@@ -307,7 +307,7 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
    * @throws MojoExecutionException
    */
   protected void createExploded(File target, File descriptor,
-    Set<ArtifactItem> smpDeps)
+    Set<SmpArtifact> smpDeps)
     throws IOException, MojoExecutionException
   {
     logger.info("create exploded smp at {}", target);
@@ -429,7 +429,7 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
    *
    * @throws MojoExecutionException
    */
-  private List<DependencyNode> getDependencies(Set<ArtifactItem> smpDeps)
+  private List<DependencyNode> getDependencies(Set<SmpArtifact> smpDeps)
     throws MojoExecutionException
   {
     //J-
@@ -480,7 +480,7 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
      *
      * @param items
      */
-    public SmpArtifactFilter(Set<ArtifactItem> items)
+    public SmpArtifactFilter(Set<SmpArtifact> items)
     {
       this.items = items;
     }
@@ -500,7 +500,7 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
     {
       boolean result = true;
 
-      for (ArtifactItem item : items)
+      for (SmpArtifact item : items)
       {
         if (artifact.getGroupId().equals(item.getGroupId())
           && artifact.getArtifactId().equals(item.getArtifactId()))
@@ -517,7 +517,7 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
     //~--- fields -------------------------------------------------------------
 
     /** Field description */
-    private final Set<ArtifactItem> items;
+    private final Set<SmpArtifact> items;
   }
 
 
