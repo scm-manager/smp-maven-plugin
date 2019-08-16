@@ -34,7 +34,6 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import com.google.common.collect.Lists;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -45,19 +44,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import java.io.File;
-import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -83,145 +71,50 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
   /**
    * the logger for AppendDependenciesMojo
    */
-  private static final Logger logger =
-    LoggerFactory.getLogger(AppendDependenciesMojo.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AppendDependenciesMojo.class);
 
-  //~--- methods --------------------------------------------------------------
+  @Component
+  private MavenProject project;
 
-  /**
-   * Method description
-   *
-   *
-   *
-   * @param descriptor
-   * @throws MojoExecutionException
-   */
-  @Override
-  protected void execute(File descriptor)
-    throws MojoExecutionException {
-    if (descriptor.exists())
-    {
-      Set<ArtifactItem> dependencies = SmpDependencyCollector.collect(project);
 
-      if (dependencies.isEmpty())
-      {
-        logger.info("no plugin dependencies found");
-      }
-      else
-      {
-        logger.info("update plugin descriptor");
-
-        try
-        {
-          rewritePluginDescriptor(descriptor, dependencies);
-        }
-        catch (SAXException | IOException | ParserConfigurationException
-          | TransformerException ex)
-        {
-          logger.error("could not rewrite plugin descriptor with dependencies",
-            ex);
-        }
-      }
-    }
-    else
-    {
-      logger.warn(
-        "no plugin descriptor found, skipping append-dependencies goal");
-    }
-  }
-
-  //~--- set methods ----------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @param project
-   */
   public void setProject(MavenProject project)
   {
     this.project = project;
   }
 
-  //~--- methods --------------------------------------------------------------
+  @Override
+  protected void execute(File descriptor) throws MojoExecutionException {
+    if (descriptor.exists()) {
+      Set<SmpArtifact> dependencies = SmpDependencyCollector.collect(project);
 
-  /**
-   * Method description
-   *
-   *
-   * @param doc
-   *
-   * @return
-   */
-  private List<Node> findDependenciesElements(Document doc)
-  {
-    List<Node> nodes = Lists.newArrayList();
-    NodeList list = doc.getElementsByTagName(ELEMENT_DEPENDENCIES);
-
-    for (int i = 0; i < list.getLength(); i++)
-    {
-      Node node = list.item(i);
-
-      if (ELEMENT_DEPENDENCIES.equals(node.getNodeName()))
-      {
-        nodes.add(node);
+      if (dependencies.isEmpty()) {
+        LOG.info("no plugin dependencies found");
+      } else {
+        LOG.info("update plugin descriptor");
+        rewritePluginDescriptor(descriptor, dependencies);
       }
+    } else {
+      LOG.warn("no plugin descriptor found, skipping append-dependencies goal");
     }
-
-    return nodes;
   }
 
-  /**
-   * Method description
-   *
-   *
-   *
-   * @param descriptor
-   * @param dependencies
-   *
-   * @throws IOException
-   * @throws ParserConfigurationException
-   * @throws SAXException
-   * @throws TransformerConfigurationException
-   * @throws TransformerException
-   */
-  private void rewritePluginDescriptor(File descriptor,
-    Set<ArtifactItem> dependencies) throws SAXException, IOException, ParserConfigurationException, TransformerException
-  {
-    DocumentBuilder builder =
-      DocumentBuilderFactory.newInstance().newDocumentBuilder();
-    Document doc = builder.parse(descriptor);
+  private void rewritePluginDescriptor(File descriptor, Set<SmpArtifact> dependencies) throws MojoExecutionException {
+    Document doc = XmlNodes.createDocument(descriptor);
 
-    // drop existing
-    for (Node node : findDependenciesElements(doc))
-    {
-      node.getParentNode().removeChild(node);
-    }
+    Element root = doc.getDocumentElement();
+    // drop existing dependencies node
+    XmlNodes.removeNode(root, ELEMENT_DEPENDENCIES);
 
     Element dependenciesEl = doc.createElement(ELEMENT_DEPENDENCIES);
+    root.appendChild(dependenciesEl);
 
-    doc.getDocumentElement().appendChild(dependenciesEl);
+    dependencies.forEach(smp -> {
+      Element dependencyEl = doc.createElement(ELEMENT_DEPENDENCY);
+      dependencyEl.setTextContent(smp.getPluginName());
+      dependenciesEl.appendChild(dependencyEl);
+    });
 
-    for (ArtifactItem item : dependencies)
-    {
-      if (!item.isSelf(project))
-      {
-        Element dependencyEl = doc.createElement(ELEMENT_DEPENDENCY);
-
-        dependencyEl.setTextContent(item.getArtifactId());
-        dependenciesEl.appendChild(dependencyEl);
-      }
-    }
-
-    Transformer transformer = TransformerFactory.newInstance().newTransformer();
-
-    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-    transformer.transform(new DOMSource(doc), new StreamResult(descriptor));
+    XmlNodes.writeDocument(descriptor, doc);
   }
 
-  //~--- fields ---------------------------------------------------------------
-
-  /** Field description */
-  @Component
-  private MavenProject project;
 }

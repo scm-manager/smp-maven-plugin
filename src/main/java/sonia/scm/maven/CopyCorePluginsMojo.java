@@ -91,11 +91,11 @@ public class CopyCorePluginsMojo extends AbstractMojo
    * Method description
    *
    *
-   * @param artifactItems
+   * @param smpArtifacts
    */
-  public void setArtifactItems(List<ArtifactItem> artifactItems)
+  public void setSmpArtifacts(List<SmpArtifact> smpArtifacts)
   {
-    this.artifactItems = artifactItems;
+    this.smpArtifacts = smpArtifacts;
   }
 
   /**
@@ -139,9 +139,9 @@ public class CopyCorePluginsMojo extends AbstractMojo
 
     List<Plugin> plugins = Lists.newArrayList();
 
-    for (ArtifactItem artifactItem : artifactItems)
+    for (SmpArtifact smpArtifact : smpArtifacts)
     {
-      File artifactFile = resolve(artifactItem);
+      File artifactFile = resolve(smpArtifact);
 
       if ((artifactFile != null) && artifactFile.exists())
       {
@@ -152,7 +152,7 @@ public class CopyCorePluginsMojo extends AbstractMojo
       else
       {
         logger.warn("could not resolve file for {}",
-          artifactItem.getArtifactId());
+          smpArtifact.getArtifactId());
       }
     }
 
@@ -181,15 +181,15 @@ public class CopyCorePluginsMojo extends AbstractMojo
    * Method description
    *
    *
-   * @param artifactItem
+   * @param smpArtifact
    *
    * @return
    */
-  private Artifact convert(ArtifactItem artifactItem)
+  private Artifact convert(SmpArtifact smpArtifact)
   {
-    return repositorySystem.createArtifact(artifactItem.getGroupId(),
-      artifactItem.getArtifactId(), artifactItem.getVersion(),
-      artifactItem.getType());
+    return repositorySystem.createArtifact(smpArtifact.getGroupId(),
+      smpArtifact.getArtifactId(), smpArtifact.getVersion(),
+      SmpArtifact.TYPE);
   }
 
   /**
@@ -242,16 +242,16 @@ public class CopyCorePluginsMojo extends AbstractMojo
    * Method description
    *
    *
-   * @param artifactItem
+   * @param smpArtifact
    *
    * @return
    */
-  private File resolve(ArtifactItem artifactItem)
+  private File resolve(SmpArtifact smpArtifact)
   {
-    Artifact artifact = convert(artifactItem);
+    Artifact artifact = convert(smpArtifact);
     ArtifactResolutionRequest request = new ArtifactResolutionRequest();
 
-    request.setArtifact(convert(artifactItem));
+    request.setArtifact(convert(smpArtifact));
     request.setRemoteRepositories(project.getRemoteArtifactRepositories());
     request.setLocalRepository(localRepository);
 
@@ -428,7 +428,7 @@ public class CopyCorePluginsMojo extends AbstractMojo
 
   /** Field description */
   @Parameter(required = true)
-  private List<ArtifactItem> artifactItems;
+  private List<SmpArtifact> smpArtifacts;
 
   /** Field description */
   @Parameter(defaultValue = "${localRepository}")

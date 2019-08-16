@@ -67,7 +67,7 @@ public class ExplodedPackageMojo extends AbstractPackagingMojo
    */
   @Override
   protected void execute(File descriptor) throws MojoExecutionException {
-    Set<ArtifactItem> smps = SmpDependencyCollector.collect(project);
+    Set<SmpArtifact> smps = SmpDependencyCollector.collect(project);
 
     try
     {

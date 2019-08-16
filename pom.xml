@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -44,6 +45,13 @@
   <dependencies>
 
     <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.8</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
       <version>${maven.version}</version>
@@ -79,7 +87,7 @@
       <artifactId>maven-dependency-tree</artifactId>
       <version>2.1</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-archiver</artifactId>
@@ -110,6 +118,11 @@
       <version>1.0.2</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.zeroturnaround</groupId>
+      <artifactId>zt-zip</artifactId>
+      <version>1.13</version>
+    </dependency>
 
     <dependency>
       <groupId>commons-io</groupId>
@@ -118,7 +131,7 @@
     </dependency>
 
     <!-- jetty -->
-    
+
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
@@ -130,9 +143,9 @@
       <artifactId>jetty-webapp</artifactId>
       <version>${jetty.version}</version>
     </dependency>
-    
+
     <!-- websockets/livereload -->
-     
+
     <dependency>
       <groupId>javax.websocket</groupId>
       <artifactId>javax.websocket-api</artifactId>
@@ -150,7 +163,7 @@
       <artifactId>javax-websocket-client-impl</artifactId>
       <version>${jetty.version}</version>
     </dependency>
-    
+
     <!-- json/livereload -->
 
     <dependency>
@@ -158,7 +171,7 @@
       <artifactId>directory-watcher</artifactId>
       <version>0.8.0</version>
     </dependency>
-    
+
     <dependency>
       <groupId>javax.json</groupId>
       <artifactId>javax.json-api</artifactId>
@@ -371,7 +384,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    
+
     <maven.version>3.1.1</maven.version>
     <jetty.version>9.2.7.v20150116</jetty.version>
 

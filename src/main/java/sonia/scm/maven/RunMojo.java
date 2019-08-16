@@ -1,19 +1,19 @@
 /**
  * Copyright (c) 2014, Sebastian Sdorra
  * All rights reserved.
- *
+ * <p>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * <p>
  * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
+ * this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  * 3. Neither the name of SCM-Manager; nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -24,10 +24,9 @@
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * <p>
  * https://bitbucket.org/sdorra/smp-maven-plugin
  */
-
 
 
 package sonia.scm.maven;
@@ -35,14 +34,17 @@ package sonia.scm.maven;
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.google.common.base.Strings;
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import sonia.scm.maven.lr.LiveReloadDirectoryListener;
 
 import java.awt.*;
@@ -57,17 +59,17 @@ import java.util.concurrent.TimeUnit;
 //~--- JDK imports ------------------------------------------------------------
 
 /**
- *
  * @author Sebastian Sdorra
  */
 @Mojo(
   name = "run",
   requiresDependencyResolution = ResolutionScope.RUNTIME
 )
-public class RunMojo extends AbstractPackagingMojo
-{
+public class RunMojo extends AbstractPackagingMojo {
 
-  /** Field description */
+  /**
+   * Field description
+   */
   private static final String DIRECTORY_PLUGINS = "plugins";
 
   /**
@@ -80,110 +82,90 @@ public class RunMojo extends AbstractPackagingMojo
   /**
    * Method description
    *
-   *
    * @param backgroud
    */
-  public void setBackgroud(boolean backgroud)
-  {
+  public void setBackgroud(boolean backgroud) {
     this.backgroud = backgroud;
   }
 
   /**
    * Method description
    *
-   *
    * @param contextPath
    */
-  public void setContextPath(String contextPath)
-  {
+  public void setContextPath(String contextPath) {
     this.contextPath = contextPath;
   }
 
   /**
    * Method description
    *
-   *
    * @param link
    */
-  public void setLink(boolean link)
-  {
+  public void setLink(boolean link) {
     this.link = link;
   }
 
   /**
    * Method description
    *
-   *
    * @param loggingConfiguration
    */
-  public void setLoggingConfiguration(String loggingConfiguration)
-  {
+  public void setLoggingConfiguration(String loggingConfiguration) {
     this.loggingConfiguration = loggingConfiguration;
   }
 
   /**
    * Method description
    *
-   *
    * @param openBrowser
    */
-  public void setOpenBrowser(boolean openBrowser)
-  {
+  public void setOpenBrowser(boolean openBrowser) {
     this.openBrowser = openBrowser;
   }
 
   /**
    * Method description
    *
-   *
    * @param port
    */
-  public void setPort(int port)
-  {
+  public void setPort(int port) {
     this.port = port;
   }
 
   /**
    * Method description
    *
-   *
    * @param scmHome
    */
-  public void setScmHome(File scmHome)
-  {
+  public void setScmHome(File scmHome) {
     this.scmHome = scmHome;
   }
 
   /**
    * Method description
    *
-   *
    * @param stage
    */
-  public void setStage(String stage)
-  {
+  public void setStage(String stage) {
     this.stage = stage;
   }
 
   /**
    * Method description
    *
-   *
    * @param stopKey
    */
-  public void setStopKey(String stopKey)
-  {
+  public void setStopKey(String stopKey) {
     this.stopKey = stopKey;
   }
 
   /**
    * Method description
    *
-   *
    * @param stopPort
    */
-  public void setStopPort(int stopPort)
-  {
+  public void setStopPort(int stopPort) {
     this.stopPort = stopPort;
   }
 
@@ -192,44 +174,33 @@ public class RunMojo extends AbstractPackagingMojo
   /**
    * Method description
    *
-   *
    * @param descriptor
-   *
    * @throws MojoExecutionException
    */
   @Override
-  protected void execute(File descriptor)
-    throws MojoExecutionException {
+  protected void execute(File descriptor) throws MojoExecutionException {
     File pluginDirectory = new File(scmHome, DIRECTORY_PLUGINS);
-    File exploded = new File(pluginDirectory, createPluginPath(project.getArtifact()));
+    SmpArtifact self = createSmpArtifact(descriptor);
+    File exploded = new File(pluginDirectory, createPluginPath(self));
 
     // TODO check for version updates
     // TODO transitive smp dependencies
-    Set<ArtifactItem> smps = SmpDependencyCollector.collect(project);
-
-    // Deactivated to prevent errors / may cause crazy behaviour
-    //    for (ArtifactItem smp : smps)
-    //    {
-    //      install(pluginDirectory, smp);
-    //    }
+    Set<SmpArtifact> smps = SmpDependencyCollector.collect(project);
+    for (SmpArtifact smp : smps) {
+      install(pluginDirectory, smp);
+    }
 
     PluginPathResolver pathResolver = new PluginPathResolver(
-          classesDirectory.toPath(), webappSourceDirectory.toPath(), packageDirectory.toPath(), exploded.toPath()
+      classesDirectory.toPath(), webappSourceDirectory.toPath(), packageDirectory.toPath(), exploded.toPath()
     );
 
-    try
-    {
-      if (link)
-      {
+    try {
+      if (link) {
         createExplodedLinked(pathResolver);
-      }
-      else
-      {
+      } else {
         createExploded(exploded, descriptor, smps);
       }
-    }
-    catch (IOException ex)
-    {
+    } catch (IOException ex) {
       throw new MojoExecutionException("could not create exploded smp", ex);
     }
 
@@ -239,6 +210,23 @@ public class RunMojo extends AbstractPackagingMojo
     runScmServer(pathResolver, warFile);
   }
 
+  private SmpArtifact createSmpArtifact(File descriptor) throws MojoExecutionException {
+    if (descriptor.exists() && descriptor.isFile()) {
+      Document document = XmlNodes.createDocument(descriptor);
+      Node information = XmlNodes.getChild(document, "information");
+      if (information == null) {
+        throw new MojoExecutionException("could not find information node");
+      }
+      Node name = XmlNodes.getChild(information, "name");
+      if (name == null) {
+        throw new MojoExecutionException("could not find name node");
+      }
+      return new SmpArtifact(name.getTextContent(), project.getGroupId(), project.getArtifactId(), project.getVersion());
+    } else {
+      throw new MojoExecutionException("could not find descriptor");
+    }
+  }
+
 
   private void createExplodedLinked(PluginPathResolver pathResolver) throws IOException {
     logger.info("create exploded linked smp at {}", pathResolver.getInstallationDirectory());
@@ -246,36 +234,16 @@ public class RunMojo extends AbstractPackagingMojo
     linker.link();
   }
 
-  /**
-   * Method description
-   *
-   * @param artifact
-   * @return
-   */
-  private String createPluginPath(Artifact artifact) {
-    return artifact.getArtifactId();
+  private String createPluginPath(SmpArtifact artifact) {
+    return artifact.getPluginName();
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param directory
-   * @param archive
-   *
-   * @throws MojoExecutionException
-   */
-  private void extractSmp(File directory, File archive)
-    throws MojoExecutionException
-  {
+  private void extractSmp(File directory, File archive) throws MojoExecutionException {
     logger.info("extract smp dependency {} to {}", archive, directory);
 
-    try
-    {
+    try {
       mkdirs(directory);
-    }
-    catch (IOException ex)
-    {
+    } catch (IOException ex) {
       throw new MojoExecutionException(
         "could not create plugin directory ".concat(directory.getPath()), ex);
     }
@@ -285,58 +253,28 @@ public class RunMojo extends AbstractPackagingMojo
     unArchiver.extract();
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param pluginDirectory
-   * @param smp
-   *
-   * @throws MojoExecutionException
-   */
-  private void install(File pluginDirectory, ArtifactItem smp)
-    throws MojoExecutionException
-  {
-    if (!smp.isSelf(project))
-    {
-      Artifact artifact = convertToArtifact(smp);
-      File directory = new File(pluginDirectory, createPluginPath(artifact));
+  private void install(File pluginDirectory, SmpArtifact smp) throws MojoExecutionException {
+    File directory = new File(pluginDirectory, createPluginPath(smp));
 
-      if (!directory.exists())
-      {
-        logger.info("install smp dependency {}", artifact.getId());
-
-        File archive = checkAndResolve(artifact);
-
-        extractSmp(new File(pluginDirectory, createPluginPath(artifact)),
-          archive);
-      }
-      else
-      {
-        logger.info("smp dependency {}, is already installed",
-          artifact.getId());
-      }
+    if (!directory.exists()) {
+      logger.info("install smp dependency {}", smp.getPluginName());
+      File archive = checkAndResolve(convertToArtifact(smp));
+      extractSmp(directory, archive);
+    } else {
+      logger.info("smp dependency {}, is already installed", smp.getPluginName());
     }
   }
 
-  /**
-   * Method description
-   *
-   *
-   * @param warFile
-   *
-   * @throws MojoExecutionException
-   */
   private void runScmServer(PluginPathResolver pathResolver, File warFile) throws MojoExecutionException {
     ScmServer.ScmServerBuilder builder = ScmServer.builder(warFile.toPath(), scmHome.toPath())
-            .withPort(port)
-            .withContextPath(contextPath)
-            .withBackground(backgroud)
-            .withDisableCorePlugins(corePlugin)
-            .withLoggingConfiguration(loggingConfiguration)
-            .withStopPort(stopPort)
-            .withStopKey(stopKey)
-            .withStage(stage);
+      .withPort(port)
+      .withContextPath(contextPath)
+      .withBackground(backgroud)
+      .withDisableCorePlugins(corePlugin)
+      .withLoggingConfiguration(loggingConfiguration)
+      .withStopPort(stopPort)
+      .withStopKey(stopKey)
+      .withStage(stage);
 
     if (isOpenBrowserListenerEnabled()) {
       logger.info("install open browser listener");
@@ -401,29 +339,14 @@ public class RunMojo extends AbstractPackagingMojo
     return openBrowser && Desktop.isDesktopSupported();
   }
 
-  //~--- get methods ----------------------------------------------------------
-
-  /**
-   * Method description
-   *
-   *
-   * @return
-   *
-   * @throws MojoExecutionException
-   */
-  private File getWebApplicationArchive() throws MojoExecutionException
-  {
-    if (Strings.isNullOrEmpty(webApplication.getVersion()))
-    {
+  private File getWebApplicationArchive() throws MojoExecutionException {
+    if (Strings.isNullOrEmpty(webApplication.getVersion())) {
       String version;
       MavenProject parent = project.getParent();
 
-      if (parent != null)
-      {
+      if (parent != null) {
         version = parent.getVersion();
-      }
-      else
-      {
+      } else {
         version = project.getVersion();
       }
 
@@ -453,28 +376,40 @@ public class RunMojo extends AbstractPackagingMojo
   @Parameter
   private boolean corePlugin = false;
 
-  /** Field description */
+  /**
+   * Field description
+   */
   @Parameter
   private String contextPath = "/scm";
 
-  /** Field description */
+  /**
+   * Field description
+   */
   @Parameter
   private boolean link = true;
 
-  /** Field description */
+  /**
+   * Field description
+   */
   @Parameter
   private boolean backgroud = false;
 
-  /** Field description */
+  /**
+   * Field description
+   */
   @Parameter(property = "loggingConfiguration",
     defaultValue = "/logback.default.xml")
   private String loggingConfiguration;
 
-  /** Field description */
+  /**
+   * Field description
+   */
   @Parameter
   private int port = 8081;
 
-  /** Field description */
+  /**
+   * Field description
+   */
   @Parameter(
     property = "scm.home",
     alias = "scmHome",
@@ -482,27 +417,39 @@ public class RunMojo extends AbstractPackagingMojo
   )
   private File scmHome;
 
-  /** Field description */
+  /**
+   * Field description
+   */
   @Parameter(property = "scm.stage", defaultValue = "DEVELOPMENT")
   private String stage = "DEVELOPMENT";
 
-  /** Field description */
+  /**
+   * Field description
+   */
   @Parameter
   private String stopKey = "stop";
 
-  /** Field description */
+  /**
+   * Field description
+   */
   @Parameter
   private int stopPort = 8085;
 
-  /** Field description */
+  /**
+   * Field description
+   */
   @Parameter
   private boolean openBrowser = true;
 
-  /** Field description */
+  /**
+   * Field description
+   */
   @Parameter
   private final WebApplication webApplication = new WebApplication();
 
-  /** Field description */
+  /**
+   * Field description
+   */
   @Component(role = UnArchiver.class, hint = PACKAGE_JAR)
   private UnArchiver unArchiver;
 }

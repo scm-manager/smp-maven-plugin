@@ -7,6 +7,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
@@ -15,6 +16,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 
@@ -25,6 +27,17 @@ class XmlNodes {
 
   static boolean hasChild(Node parent, String name) {
     return getChild(parent, name) != null;
+  }
+
+  static Node getChild(Document document, String name) {
+    return getChild(document.getDocumentElement(), name);
+  }
+
+  static void removeNode(Node parent, String name) {
+    Node child = getChild(parent, name);
+    if (child != null) {
+      parent.removeChild(child);
+    }
   }
 
   static Node getChild(Node parent, String name) {
@@ -58,7 +71,6 @@ class XmlNodes {
     }
   }
 
-
   static void appendNode(Document document, Node parent, String name, String value) {
     if (value != null) {
       Element node = document.createElement(name);
@@ -68,11 +80,27 @@ class XmlNodes {
     }
   }
 
+  static Document createDocument(byte[] bytes) throws MojoExecutionException {
+    try (ByteArrayInputStream input = new ByteArrayInputStream(bytes)) {
+      return documentBuilder().parse(input);
+    } catch (IOException | SAXException ex) {
+      throw new MojoExecutionException("failed to parse descriptor", ex);
+    }
+  }
+
   static Document createDocument(File descriptor) throws MojoExecutionException {
     try {
-      return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(descriptor);
-    } catch (IOException | ParserConfigurationException | SAXException ex) {
-      throw new MojoExecutionException("could not parse plugin descriptor", ex);
+      return documentBuilder().parse(descriptor);
+    } catch (IOException | SAXException ex) {
+      throw new MojoExecutionException("failed to parse descriptor", ex);
+    }
+  }
+
+  private static DocumentBuilder documentBuilder() throws MojoExecutionException {
+    try {
+      return DocumentBuilderFactory.newInstance().newDocumentBuilder();
+    } catch (ParserConfigurationException ex) {
+      throw new MojoExecutionException("could not create document builder", ex);
     }
   }
 }
