@@ -31,21 +31,25 @@ package sonia.scm.maven;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  *
  * @author Sebastian Sdorra
  */
-@Value
-class SmpArtifact implements ArtifactItem {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class SmpArtifact implements ArtifactItem {
 
   public static final String TYPE = "smp";
 
-  private final String pluginName;
-  private final String groupId;
-  private final String artifactId;
-  private final String version;
+  private String pluginName;
+  private String groupId;
+  private String artifactId;
+  private String version;
 
   @Override
   public String getType() {
