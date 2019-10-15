@@ -5,8 +5,13 @@ import java.net.URL;
 
 public interface ScmServerListener {
 
-    void started(URL baseURL) throws IOException;
+  default void started(URL baseURL) throws IOException {
+  }
 
-    void stopped(URL baseURL) throws IOException;
+  default void ready(URL baseURL) throws IOException {
+  }
+
+  default void stopped(URL baseURL) throws IOException {
+  }
 
 }

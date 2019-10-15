@@ -74,9 +74,4 @@ public class OpenBrowserListener implements ScmServerListener
       }
     }).start();
   }
-
-  @Override
-  public void stopped(URL baseURL) {
-    // nothing to be done on stop
-  }
 }

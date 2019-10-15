@@ -74,7 +74,8 @@ public final class ScmServer {
 
             Server server = new Server();
 
-            server.addConnector(createServerConnector(server));
+            URL baseURL = createBaseURL();
+            server.addConnector(createServerConnector(server, baseURL));
 
             ContextHandlerCollection col = new ContextHandlerCollection();
             col.setHandlers(new Handler[]{
@@ -84,6 +85,7 @@ public final class ScmServer {
             server.setHandler(col);
 
             startStopMonitor(server);
+            startReadyNotifier(baseURL);
             server.start();
 
             LOG.info("scm-server is now accessible at http://localhost:{}{}", port, contextPath);
@@ -97,7 +99,15 @@ public final class ScmServer {
         }
     }
 
-    private void startStopMonitor(Server server) {
+  private void startReadyNotifier(URL baseURL) throws MalformedURLException {
+    new Thread(new ReadyNotifier(listeners, baseURL, createReadinessURL())).start();
+  }
+
+  private URL createReadinessURL() throws MalformedURLException {
+    return new URL("http://localhost:" + port + contextPath + "/api/v2");
+  }
+
+  private void startStopMonitor(Server server) {
         new StopMonitorThread(server, stopPort, stopKey).start();
     }
 
@@ -124,7 +134,7 @@ public final class ScmServer {
         return context;
     }
 
-    private ServerConnector createServerConnector(Server server) throws MalformedURLException {
+    private ServerConnector createServerConnector(Server server, URL baseURL) throws MalformedURLException {
         ServerConnector connector = new ServerConnector(server);
         HttpConfiguration cfg = new HttpConfiguration();
 
@@ -136,15 +146,15 @@ public final class ScmServer {
         factories.add(new HttpConnectionFactory(cfg));
         connector.setConnectionFactories(factories);
 
-        URL url = new URL("http://localhost:" + port + contextPath);
 
-        connector.addLifeCycleListener(new AbstractLifeCycle.AbstractLifeCycleListener() {
+
+      connector.addLifeCycleListener(new AbstractLifeCycle.AbstractLifeCycleListener() {
             @Override
             public void lifeCycleStarted(LifeCycle event) {
                 for (ScmServerListener listener : listeners) {
-                    LOG.info("call started listener {} with url {}", listener.getClass(), url);
+                    LOG.info("call started listener {} with url {}", listener.getClass(), baseURL);
                     try {
-                        listener.started(url);
+                        listener.started(baseURL);
                     } catch (IOException ex) {
                         LOG.warn("listener failed to start: " + listener.getClass(), ex);
                     }
@@ -155,7 +165,7 @@ public final class ScmServer {
             public void lifeCycleStopped(LifeCycle event) {
                 for (ScmServerListener listener : listeners) {
                     try {
-                        listener.stopped(url);
+                        listener.stopped(baseURL);
                     } catch (IOException ex) {
                         LOG.warn("listener failed to stop: " + listener.getClass(), ex);
                     }
@@ -168,7 +178,11 @@ public final class ScmServer {
         return connector;
     }
 
-    public static ScmServerBuilder builder(Path warFile, Path scmHome) {
+  private URL createBaseURL() throws MalformedURLException {
+    return new URL("http://localhost:" + port + contextPath);
+  }
+
+  public static ScmServerBuilder builder(Path warFile, Path scmHome) {
         return new ScmServerBuilder(warFile, scmHome);
     }
 

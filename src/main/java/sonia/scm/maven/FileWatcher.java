@@ -45,8 +45,9 @@ public class FileWatcher implements DirectoryChangeListener, ScmServerListener {
   }
 
   @Override
-  public void started(URL baseURL) throws IOException {
+  public void ready(URL baseURL) throws IOException {
     checkState(watcher == null, "file watcher is already started");
+    LOG.info("start file watcher");
 
     List<Path> paths = listeners.stream()
       .flatMap(listener -> listener.paths.stream())
