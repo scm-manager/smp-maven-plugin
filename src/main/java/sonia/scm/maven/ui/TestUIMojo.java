@@ -8,9 +8,11 @@ import org.slf4j.LoggerFactory;
 
 @Mojo(name = "test-ui")
 public class TestUIMojo extends AbstractUIMojo {
+
+  private static final Logger LOG = LoggerFactory.getLogger(TestUIMojo.class);
+
   @Parameter( property = "skipTests")
   private boolean skipTests;
-  private static final Logger LOG = LoggerFactory.getLogger(TestUIMojo.class);
 
   @Override
   public void execute() throws MojoExecutionException {
