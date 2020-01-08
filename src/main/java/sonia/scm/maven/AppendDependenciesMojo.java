@@ -66,6 +66,9 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
   private static final String ELEMENT_DEPENDENCIES = "dependencies";
 
   /** Field description */
+  private static final String ELEMENT_OPTIONAL_DEPENDENCIES = "optional-dependencies";
+
+  /** Field description */
   private static final String ELEMENT_DEPENDENCY = "dependency";
 
   /**
@@ -104,14 +107,22 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
     Element root = doc.getDocumentElement();
     // drop existing dependencies node
     XmlNodes.removeNode(root, ELEMENT_DEPENDENCIES);
+    XmlNodes.removeNode(root, ELEMENT_OPTIONAL_DEPENDENCIES);
 
     Element dependenciesEl = doc.createElement(ELEMENT_DEPENDENCIES);
     root.appendChild(dependenciesEl);
 
+    Element optionalDependenciesEl = doc.createElement(ELEMENT_OPTIONAL_DEPENDENCIES);
+    root.appendChild(optionalDependenciesEl);
+
     dependencies.forEach(smp -> {
       Element dependencyEl = doc.createElement(ELEMENT_DEPENDENCY);
       dependencyEl.setTextContent(smp.getPluginName());
-      dependenciesEl.appendChild(dependencyEl);
+      if (smp.isOptional()) {
+        optionalDependenciesEl.appendChild(dependencyEl);
+      } else {
+        dependenciesEl.appendChild(dependencyEl);
+      }
     });
 
     XmlNodes.writeDocument(descriptor, doc);

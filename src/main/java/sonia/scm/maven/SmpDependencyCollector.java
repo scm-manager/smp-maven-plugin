@@ -102,7 +102,13 @@ public final class SmpDependencyCollector {
       String name = getNameFromDescriptor(file);
       if (name != null) {
         LOG.debug("found smp dependency {}", name);
-        smps.add(new SmpArtifact(name, artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion()));
+        smps.add(new SmpArtifact(
+          name,
+          artifact.getGroupId(),
+          artifact.getArtifactId(),
+          artifact.getVersion(),
+          artifact.isOptional())
+        );
       }
     }
     return smps;
