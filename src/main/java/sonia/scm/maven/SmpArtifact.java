@@ -50,6 +50,7 @@ public class SmpArtifact implements ArtifactItem {
   private String groupId;
   private String artifactId;
   private String version;
+  private boolean optional;
 
   @Override
   public String getType() {

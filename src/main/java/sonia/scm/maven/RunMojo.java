@@ -221,7 +221,13 @@ public class RunMojo extends AbstractPackagingMojo {
       if (name == null) {
         throw new MojoExecutionException("could not find name node");
       }
-      return new SmpArtifact(name.getTextContent(), project.getGroupId(), project.getArtifactId(), project.getVersion());
+      return new SmpArtifact(
+        name.getTextContent(),
+        project.getGroupId(),
+        project.getArtifactId(),
+        project.getVersion(),
+        false
+      );
     } else {
       throw new MojoExecutionException("could not find descriptor");
     }

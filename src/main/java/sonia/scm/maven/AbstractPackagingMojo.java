@@ -258,7 +258,7 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
     {
       Artifact artifact = node.getArtifact();
 
-      if (PACKAGE_JAR.equals(artifact.getType()))
+      if (PACKAGE_JAR.equals(artifact.getType()) && !artifact.isOptional())
       {
         try
         {
@@ -435,7 +435,7 @@ public abstract class AbstractPackagingMojo extends AbstractDescriptorMojo
     //J-
     ArtifactFilter filter = new AndArtifactFilter(
       Arrays.asList(
-        new ScopeArtifactFilter(Artifact.SCOPE_RUNTIME), 
+        new ScopeArtifactFilter(Artifact.SCOPE_RUNTIME),
         new SmpArtifactFilter(smpDeps)
       )
     );
