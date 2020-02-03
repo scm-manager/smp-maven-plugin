@@ -183,6 +183,31 @@
       <version>1.0.4</version>
     </dependency>
 
+    <!-- jaxb -->
+
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>${jaxb.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>${jaxb.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>${jaxb.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>activation</artifactId>
+      <version>1.1.1</version>
+    </dependency>
     <!-- test -->
 
     <dependency>
@@ -385,6 +410,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
 
     <maven.version>3.1.1</maven.version>
+    <jaxb.version>2.3.0</jaxb.version>
     <jetty.version>9.2.7.v20150116</jetty.version>
 
     <junit.jupiter.version>5.3.0</junit.jupiter.version>

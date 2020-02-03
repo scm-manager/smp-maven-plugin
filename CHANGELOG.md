@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- JAXB dependencies in order to fix builds on Java versions > 8
+
 ## [1.0.0-rc2] - 2020-01-13
 
 ### Added
