@@ -411,7 +411,7 @@
 
     <maven.version>3.1.1</maven.version>
     <jaxb.version>2.3.0</jaxb.version>
-    <jetty.version>9.2.7.v20150116</jetty.version>
+    <jetty.version>9.4.26.v20200117</jetty.version>
 
     <junit.jupiter.version>5.3.0</junit.jupiter.version>
     <mockito.version>2.21.0</mockito.version>
