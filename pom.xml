@@ -11,7 +11,7 @@
     Maven packaging for SCM-Manager 2.x plugins.
   </description>
 
-  <url>https://bitbucket.org/sdorra/smp-maven-plugin</url>
+  <url>https://github.com/scm-manager/smp-maven-plugin</url>
 
   <licenses>
     <license>
@@ -24,21 +24,21 @@
     <developer>
       <id>sdorra</id>
       <name>Sebastian Sdorra</name>
-      <email>s.sdorra@gmail.com</email>
+      <email>sebastian.sdorra@cloudogu.com</email>
       <timezone>Europe/Berlin</timezone>
     </developer>
   </developers>
 
   <scm>
-    <connection>scm:hg:https://bitbucket.org/sdorra/smp-maven-plugin</connection>
-    <developerConnection>scm:hg:ssh://hg@bitbucket.org/sdorra/smp-maven-plugin/</developerConnection>
-    <url>https://bitbucket.org/sdorra/smp-maven-plugin</url>
+    <connection>scm:git:https://github.com/scm-manager/smp-maven-plugin</connection>
+    <developerConnection>scm:git:git@github.com:scm-manager/smp-maven-plugin.git</developerConnection>
+    <url>https://github.com/scm-manager/smp-maven-plugin</url>
     <tag>HEAD</tag>
   </scm>
 
   <issueManagement>
-    <system>bitbucket</system>
-    <url>https://bitbucket.org/sdorra/smp-maven-plugin/issues</url>
+    <system>github</system>
+    <url>https://github.com/scm-manager/smp-maven-plugin/issues</url>
   </issueManagement>
 
   <dependencies>
