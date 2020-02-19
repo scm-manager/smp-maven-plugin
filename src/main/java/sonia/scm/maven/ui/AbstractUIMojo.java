@@ -107,14 +107,14 @@ public abstract class AbstractUIMojo extends AbstractMojo {
 
   private MojoExecutor.Element createNodeConfiguration() {
     return element("nodeConfiguration",
-      element("version", "10.16.0")
+      element("version", "12.16.1")
     );
   }
 
   private MojoExecutor.Element createPackageManagerConfiguration() {
     return element("packageManagerConfiguration",
       element("type", "YARN"),
-      element("version", "1.16.0")
+      element("version", "1.22.0")
     );
   }
 

@@ -5,10 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 1.0.0-rc4 - 2020-02-19
 
 ### Changed
 
+- Update nodejs to version 12.16.1
+- Update yarn to version 1.22.0
 - Updated Jetty from 9.2.7.v20150116 to 9.4.26.v20200117 ([#1](https://github.com/scm-manager/smp-maven-plugin/pull/1))
 
 ## 1.0.0-rc3 - 2020-02-03
