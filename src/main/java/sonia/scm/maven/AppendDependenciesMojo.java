@@ -71,6 +71,9 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
   /** Field description */
   private static final String ELEMENT_DEPENDENCY = "dependency";
 
+  /** Field description */
+  private static final String ATTRIBUTE_VERSION = "version";
+
   /**
    * the logger for AppendDependenciesMojo
    */
@@ -118,6 +121,7 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
     dependencies.forEach(smp -> {
       Element dependencyEl = doc.createElement(ELEMENT_DEPENDENCY);
       dependencyEl.setTextContent(smp.getPluginName());
+      dependencyEl.setAttribute(ATTRIBUTE_VERSION, smp.getVersion());
       if (smp.isOptional()) {
         optionalDependenciesEl.appendChild(dependencyEl);
       } else {
