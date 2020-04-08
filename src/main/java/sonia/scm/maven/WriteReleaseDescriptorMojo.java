@@ -59,7 +59,9 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
     releaseDescriptor.url = createDownloadUrl();
     releaseDescriptor.checksum = computeCheckSum();
     releaseDescriptor.conditions = plugin.conditions;
-    releaseDescriptor.dependencies.addAll(plugin.dependencies);
+    if (plugin.dependencies != null && !plugin.dependencies.isEmpty()) {
+      releaseDescriptor.dependencies.addAll(plugin.dependencies);
+    }
     return releaseDescriptor;
   }
 
