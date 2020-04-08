@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+
+    MIT License
+
+    Copyright (c) 2020-present Cloudogu GmbH and Contributors
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+--><plugin>
+
+  <scm-version>2</scm-version>
+
+  <information>
+    <displayName>Review</displayName>
+    <author>Cloudogu GmbH</author>
+    <category>Workflow</category>
+  <name>scm-review-plugin</name>
+<version>2.1.0</version>
+<description>Depict a review process with pull requests</description>
+</information>
+
+  <conditions>
+    <min-version>2.2.0</min-version>
+    <os>Linux</os>
+    <arch>arm</arch>
+  </conditions>
+
+  <resources>
+    <script>assets/scm-review-plugin.bundle.js</script>
+  </resources>
+
+<dependencies>
+<dependency version="2.0.0">scm-mail-plugin</dependency>
+<dependency version="2.0.0">scm-other-plugin</dependency>
+</dependencies>
+<optional-dependencies>
+<dependency version="1.0.0">scm-landingpage-plugin</dependency>
+<dependency version="2.1.0">scm-editor-plugin</dependency>
+</optional-dependencies>
+<subscriber>
+<class>com.cloudogu.scm.review.emailnotification.EmailNotificationHook</class>
+<event>com.cloudogu.scm.review.comment.service.MentionEvent</event>
+</subscriber>
+<subscriber>
+<class>com.cloudogu.scm.review.comment.service.CommentService</class>
+<event>com.cloudogu.scm.review.pullrequest.service.PullRequestMergedEvent</event>
+</subscriber>
+<subscriber>
+<class>com.cloudogu.scm.review.StatusCheckHook</class>
+<event>sonia.scm.repository.PostReceiveRepositoryHookEvent</event>
+</subscriber>
+<subscriber>
+<class>com.cloudogu.scm.review.comment.service.CommentService</class>
+<event>com.cloudogu.scm.review.pullrequest.service.PullRequestRejectedEvent</event>
+</subscriber>
+<extension-point>
+<autoBind>true</autoBind>
+<multi>true</multi>
+<class>com.cloudogu.scm.review.pullrequest.service.MergeGuard</class>
+</extension-point>
+<subscriber>
+<class>com.cloudogu.scm.review.emailnotification.EmailNotificationHook</class>
+<event>com.cloudogu.scm.review.pullrequest.service.PullRequestEvent</event>
+</subscriber>
+<subscriber>
+<class>com.cloudogu.scm.review.emailnotification.EmailNotificationHook</class>
+<event>com.cloudogu.scm.review.pullrequest.service.PullRequestApprovalEvent</event>
+</subscriber>
+<subscriber>
+<class>com.cloudogu.scm.review.pullrequest.landingpage.PullRequestCreatedEventMapper</class>
+<event>com.cloudogu.scm.review.pullrequest.service.PullRequestEvent</event>
+</subscriber>
+<subscriber>
+<class>com.cloudogu.scm.review.PullRequestInformationHook</class>
+<event>sonia.scm.repository.PostReceiveRepositoryHookEvent</event>
+</subscriber>
+<rest-resource>
+<value>v2/pull-requests</value>
+<class>com.cloudogu.scm.review.config.api.RepositoryConfigResource</class>
+</rest-resource>
+<rest-resource>
+<value>v2/pull-requests</value>
+<class>com.cloudogu.scm.review.config.api.GlobalConfigResource</class>
+</rest-resource>
+<rest-resource>
+<value>v2/merge</value>
+<class>com.cloudogu.scm.review.pullrequest.api.MergeResource</class>
+</rest-resource>
+<rest-resource>
+<value>v2/pull-requests</value>
+<class>com.cloudogu.scm.review.pullrequest.api.PullRequestRootResource</class>
+</rest-resource>
+<subscriber>
+<class>com.cloudogu.scm.review.emailnotification.EmailNotificationHook</class>
+<event>com.cloudogu.scm.review.comment.service.CommentEvent</event>
+</subscriber>
+<subscriber>
+<class>com.cloudogu.scm.review.pullrequest.service.RemoveReviewMarksOnChangedCommentsHook</class>
+<event>com.cloudogu.scm.review.comment.service.CommentEvent</event>
+</subscriber>
+<extension>
+<class>com.cloudogu.scm.review.RepositoryLinkEnricher</class>
+</extension>
+<extension>
+<requires>scm-landingpage-plugin</requires>
+<class>com.cloudogu.scm.review.pullrequest.landingpage.MyOpenTasks</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.emailnotification.EmailNotificationHook</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.events.EventContextListener</class>
+</extension>
+<extension>
+<requires>scm-editor-plugin</requires>
+<class>com.cloudogu.scm.review.guard.MergeOnlyChangeGuard</class>
+</extension>
+<extension>
+<requires>scm-landingpage-plugin</requires>
+<class>com.cloudogu.scm.review.pullrequest.landingpage.MyPullRequests</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.BranchProtectionHook</class>
+</extension>
+<extension>
+<requires>scm-landingpage-plugin</requires>
+<class>com.cloudogu.scm.review.pullrequest.landingpage.MyOpenReviews</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.StatusCheckHook</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.ModuleBinder</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.PullRequestInformationHook</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.comment.service.CommentService</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.events.EventListener</class>
+</extension>
+<extension>
+<requires>scm-landingpage-plugin</requires>
+<class>com.cloudogu.scm.review.pullrequest.landingpage.PullRequestCreatedEventMapper</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.update.AddTypeToCommentUpdateStep</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.IndexLinkEnricher</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.pullrequest.service.RemoveReviewMarksOnChangedCommentsHook</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.ProcessChangedFilesHook</class>
+</extension>
+<extension>
+<class>com.cloudogu.scm.review.update.CommentLocationUpdateStep</class>
+</extension>
+<subscriber>
+<class>com.cloudogu.scm.review.ProcessChangedFilesHook</class>
+<event>sonia.scm.repository.PostReceiveRepositoryHookEvent</event>
+</subscriber>
+<subscriber>
+<class>com.cloudogu.scm.review.emailnotification.EmailNotificationHook</class>
+<event>com.cloudogu.scm.review.pullrequest.service.PullRequestMergedEvent</event>
+</subscriber>
+<subscriber>
+<class>com.cloudogu.scm.review.emailnotification.EmailNotificationHook</class>
+<event>com.cloudogu.scm.review.pullrequest.service.PullRequestRejectedEvent</event>
+</subscriber>
+<event>
+<class>com.cloudogu.scm.review.pullrequest.service.PullRequestRejectedEvent</class>
+</event>
+<event>
+<class>com.cloudogu.scm.review.comment.service.MentionEvent</class>
+</event>
+<event>
+<class>com.cloudogu.scm.review.pullrequest.service.PullRequestEvent</class>
+</event>
+<event>
+<class>com.cloudogu.scm.review.pullrequest.service.PullRequestUpdatedEvent</class>
+</event>
+<event>
+<class>com.cloudogu.scm.review.pullrequest.landingpage.PullRequestCreatedEventMapper.PullRequestCreatedEvent</class>
+</event>
+<event>
+<class>com.cloudogu.scm.review.pullrequest.service.PullRequestMergedEvent</class>
+</event>
+<event>
+<class>com.cloudogu.scm.review.pullrequest.service.PullRequestApprovalEvent</class>
+</event>
+<event>
+<class>com.cloudogu.scm.review.comment.service.CommentEvent</class>
+</event>
+<subscriber>
+<class>com.cloudogu.scm.review.events.EventListener</class>
+<event>com.cloudogu.scm.review.pullrequest.service.BasicPullRequestEvent</event>
+</subscriber>
+<subscriber>
+<class>com.cloudogu.scm.review.BranchProtectionHook</class>
+<event>sonia.scm.repository.PreReceiveRepositoryHookEvent</event>
+</subscriber>
+<subscriber>
+<class>com.cloudogu.scm.review.pullrequest.service.RemoveReviewMarksOnChangedCommentsHook</class>
+<event>com.cloudogu.scm.review.comment.service.ReplyEvent</event>
+</subscriber>
+</plugin>
