@@ -56,6 +56,7 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
     releaseDescriptor.plugin = project.getArtifactId();
     releaseDescriptor.tag = project.getVersion();
     releaseDescriptor.date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date());
+    releaseDescriptor.url = createDownloadUrl();
     releaseDescriptor.checksum = computeCheckSum();
     releaseDescriptor.conditions = plugin.conditions;
     releaseDescriptor.dependencies.addAll(plugin.dependencies);
@@ -80,6 +81,11 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
     }
   }
 
+  String createDownloadUrl() {
+    String groupIdPath = project.getGroupId().replaceAll("\\.", "/");
+    return "https://maven.scm-manager.org/nexus/content/repositories/plugin-releases/" + project.getGroupId() + "/" + project.getArtifactId() + "/" + project.getVersion() + "/" + project.getArtifactId() + "-" + project.getVersion() + ".smp";
+  }
+
   void setProject(MavenProject project) {
     this.project = project;
   }
@@ -101,6 +107,7 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
     String plugin;
     String tag;
     String date;
+    String url;
     String checksum;
     Collection<String> dependencies = new ArrayList<>();
     PluginConditions conditions;
