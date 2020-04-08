@@ -30,6 +30,9 @@ import java.util.List;
 
 import static com.google.common.io.Files.asByteSource;
 
+/**
+ * Writes a deployment descriptor file for the plugin center.
+ */
 @Mojo(
   name = "write-release-descriptor",
   requiresDependencyResolution = ResolutionScope.NONE

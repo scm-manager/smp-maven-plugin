@@ -16,6 +16,10 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * If a package.json file exists, this mojo will set its version to the
+ * version of the project.
+ */
 @Mojo(
   name = "fix-package-version",
   requiresDependencyResolution = ResolutionScope.NONE
