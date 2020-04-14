@@ -13,8 +13,6 @@ import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * If a package.json file exists, this mojo will set its version to the
@@ -34,6 +32,8 @@ public class FixPackageJsonVersionMojo extends AbstractMojo {
     if (packageJson.exists()) {
       JsonNode json = readJson(packageJson);
       fixVersion(packageJson, json);
+    } else {
+      getLog().warn("package.json not found. Nothing to fix.");
     }
   }
 
@@ -41,6 +41,8 @@ public class FixPackageJsonVersionMojo extends AbstractMojo {
     if (replaceVersion(jsonNode)) {
       ((ObjectNode) jsonNode).set("version", new TextNode(project.getVersion()));
       writeCorrectedJson(packageJson, jsonNode);
+    } else {
+      getLog().info("package.json already up to date");
     }
   }
 
@@ -61,13 +63,11 @@ public class FixPackageJsonVersionMojo extends AbstractMojo {
   }
 
   private boolean replaceVersion(JsonNode jsonNode) {
-    Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
-    while (fields.hasNext()) {
-      Map.Entry<String, JsonNode> entry = fields.next();
-      if ("version".equals(entry.getKey())) {
-        return !entry.getValue().textValue().equals(project.getVersion());
-      }
+    JsonNode version = jsonNode.get("version");
+    if (version != null) {
+      return !version.textValue().equals(project.getVersion());
     }
+    getLog().info("package.json has no version. Nothing to do.");
     return false;
   }
 
