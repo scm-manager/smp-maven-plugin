@@ -46,7 +46,7 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
 
   @Override
   protected void execute(File descriptor) throws MojoFailureException {
-    ReleaseDescriptor releaseDescriptor = createReleaseDesciptor(readPluginFile(descriptor));
+    ReleaseDescriptor releaseDescriptor = createReleaseDescriptor(readPluginFile(descriptor));
     try {
       createYamlMapper().writeValue(new File(releaseDescriptorFile), releaseDescriptor);
     } catch (IOException e) {
@@ -54,7 +54,7 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
     }
   }
 
-  private ReleaseDescriptor createReleaseDesciptor(Plugin plugin) throws MojoFailureException {
+  private ReleaseDescriptor createReleaseDescriptor(Plugin plugin) throws MojoFailureException {
     ReleaseDescriptor releaseDescriptor = new ReleaseDescriptor();
     releaseDescriptor.plugin = project.getArtifactId();
     releaseDescriptor.tag = project.getVersion();
@@ -88,7 +88,7 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
 
   String createDownloadUrl() {
     String groupIdPath = project.getGroupId().replaceAll("\\.", "/");
-    return "https://maven.scm-manager.org/nexus/content/repositories/plugin-releases/" + project.getGroupId() + "/" + project.getArtifactId() + "/" + project.getVersion() + "/" + project.getArtifactId() + "-" + project.getVersion() + ".smp";
+    return "https://maven.scm-manager.org/nexus/content/repositories/plugin-releases/" + groupIdPath + "/" + project.getArtifactId() + "/" + project.getVersion() + "/" + project.getArtifactId() + "-" + project.getVersion() + ".smp";
   }
 
   void setProject(MavenProject project) {
@@ -99,6 +99,7 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
     this.releaseDescriptorFile = releaseDescriptorFile;
   }
 
+  @SuppressWarnings("UnstableApiUsage")
   private String computeCheckSum() throws MojoFailureException {
     try {
       return asByteSource(project.getArtifact().getFile()).hash(Hashing.sha256()).toString();
