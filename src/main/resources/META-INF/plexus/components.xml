@@ -52,7 +52,7 @@ https://bitbucket.org/sdorra/smp-maven-plugin
             sonia.scm.maven:smp-maven-plugin:build-ui,
           </compile>
           <process-classes>
-            
+
           </process-classes>
           <process-test-resources>
             org.apache.maven.plugins:maven-resources-plugin:testResources
@@ -65,7 +65,8 @@ https://bitbucket.org/sdorra/smp-maven-plugin
             sonia.scm.maven:smp-maven-plugin:test-ui,
           </test>
           <package>
-            sonia.scm.maven:smp-maven-plugin:package
+            sonia.scm.maven:smp-maven-plugin:package,
+            sonia.scm.maven:smp-maven-plugin:write-release-descriptor
           </package>
           <install>
             org.apache.maven.plugins:maven-install-plugin:install

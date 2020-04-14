@@ -41,7 +41,7 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
   @Parameter(defaultValue = "${project}", required = true, readonly = true)
   private MavenProject project;
 
-  @Parameter(property = "releaseDescriptor", required = true, readonly = true)
+  @Parameter(property = "releaseDescriptor", defaultValue = "${project.build.directory}/release.yaml", required = true, readonly = true)
   private String releaseDescriptorFile;
 
   @Override
@@ -49,6 +49,7 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
     ReleaseDescriptor releaseDescriptor = createReleaseDescriptor(readPluginFile(descriptor));
     try {
       createYamlMapper().writeValue(new File(releaseDescriptorFile), releaseDescriptor);
+      getLog().info("wrote release descriptor file: " + releaseDescriptorFile);
     } catch (IOException e) {
       throw new MojoFailureException("could not write descriptor", e);
     }
