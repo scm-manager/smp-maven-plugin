@@ -58,7 +58,7 @@ public class CopyPluginXmlMojo extends AbstractMojo {
         clean();
         copy();
       } else {
-        getLog().info("skip copy of plugin.xml, because target is newer than");
+        getLog().info("skip copy of plugin.xml, because target is newer");
       }
     } else {
       getLog().info("copy plugin.xml, because target does not exist");
