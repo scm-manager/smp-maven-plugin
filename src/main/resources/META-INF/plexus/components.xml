@@ -40,6 +40,7 @@ https://bitbucket.org/sdorra/smp-maven-plugin
       <configuration>
         <phases>
           <process-resources>
+            sonia.scm.maven:smp-maven-plugin:copy-plugin-xml,
             org.apache.maven.plugins:maven-resources-plugin:resources,
             sonia.scm.maven:smp-maven-plugin:fix-descriptor,
             sonia.scm.maven:smp-maven-plugin:append-dependencies,
@@ -92,6 +93,7 @@ https://bitbucket.org/sdorra/smp-maven-plugin
         </phases>
         <default-phases>
           <smp-process-resources>
+            sonia.scm.maven:smp-maven-plugin:copy-plugin-xml,
             org.apache.maven.plugins:maven-resources-plugin:resources,
             sonia.scm.maven:smp-maven-plugin:fix-descriptor,
             sonia.scm.maven:smp-maven-plugin:append-dependencies,
