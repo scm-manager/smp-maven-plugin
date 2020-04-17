@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
-- Goal to copy plugin.xml and force recompile if necessary
-- Goal to validate common pitfalls
-- Goal to fix common pitfalls
+- Goal to copy plugin.xml and force recompile if necessary ([#3](https://github.com/scm-manager/smp-maven-plugin/pull/3))
+- Goal to validate common pitfalls ([#4](https://github.com/scm-manager/smp-maven-plugin/pull/4))
+- Goal to fix common pitfalls ([#4](https://github.com/scm-manager/smp-maven-plugin/pull/4))
 
 ### Removed
-- Goal to fix package.json version
+- Goal to fix package.json version ([#4](https://github.com/scm-manager/smp-maven-plugin/pull/4))
 
 ## 1.0.0-rc6 - 2020-04-14
 ### Added
