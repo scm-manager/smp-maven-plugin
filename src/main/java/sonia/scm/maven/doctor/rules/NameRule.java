@@ -21,9 +21,7 @@ public class NameRule extends PackageJsonRule {
     }
 
     return Result.error("pom.xml and package.json names differ")
-      .withFix(() -> {
-        packageJson.put("name", "@scm-manager/" + mavenName);
-      })
+      .withFix(() -> packageJson.put("name", "@scm-manager/" + mavenName))
       .build();
   }
 }

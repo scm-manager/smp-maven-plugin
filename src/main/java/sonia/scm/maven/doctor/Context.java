@@ -11,9 +11,17 @@ public class Context {
   private final MavenProject project;
   private final ObjectNode packageJson;
 
+  public Context(MavenProject project) {
+    this(project, null);
+  }
+
   public Context(MavenProject project, @Nullable ObjectNode packageJson) {
     this.project = project;
     this.packageJson = packageJson;
+  }
+
+  public Context withPackageJson(ObjectNode packageJson) {
+    return new Context(project, packageJson);
   }
 
   public Optional<ObjectNode> getPackageJson() {

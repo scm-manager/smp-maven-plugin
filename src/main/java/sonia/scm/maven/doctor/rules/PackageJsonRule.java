@@ -18,5 +18,5 @@ public abstract class PackageJsonRule implements Rule {
     return Result.ok("plugin has no package.json to validate");
   }
 
-  protected abstract Result validate(MavenProject project, ObjectNode jsonNodes);
+  protected abstract Result validate(MavenProject project, ObjectNode packageJson);
 }
