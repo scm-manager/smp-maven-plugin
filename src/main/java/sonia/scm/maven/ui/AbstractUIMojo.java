@@ -72,13 +72,30 @@ public abstract class AbstractUIMojo extends AbstractMojo {
     return false;
   }
 
-  protected void execute(String goal, MojoExecutor.Element ...configuration) throws MojoExecutionException {
-    MojoExecutor.ExecutionEnvironment environment = executionEnvironment(project, session, pluginManager);
+  private Plugin findOrCreatePlugin() {
+    Plugin plugin = project.getPlugin("com.github.sdorra:buildfrontend-maven-plugin");
+    if (plugin == null) {
+      plugin = createDefaultPlugin();
+    }
+    return plugin;
+  }
+
+  private Plugin createDefaultPlugin() {
     Plugin plugin = new Plugin();
     plugin.setArtifactId("buildfrontend-maven-plugin");
     plugin.setGroupId("com.github.sdorra");
     plugin.setVersion("2.5.0");
+    return plugin;
+  }
 
+  private String getProperty(String key, String defaultValue) {
+    return project.getProperties().getProperty(key, defaultValue);
+  }
+
+  protected void execute(String goal, MojoExecutor.Element ...configuration) throws MojoExecutionException {
+    MojoExecutor.ExecutionEnvironment environment = executionEnvironment(project, session, pluginManager);
+
+    Plugin plugin = findOrCreatePlugin();
 
     List<MojoExecutor.Element> elements = new ArrayList<>();
     elements.add(createNodeConfiguration());
@@ -91,7 +108,7 @@ public abstract class AbstractUIMojo extends AbstractMojo {
     if (LOG.isDebugEnabled()) {
       StringWriter writer = new StringWriter();
       Xpp3DomWriter.write(writer, cfg);
-      LOG.debug("execute {} with the following configuration:\n{}", goal, writer.toString());
+      LOG.debug("execute {} with the following configuration:\n{}", goal, writer);
     }
 
     MojoExecutor.executeMojo(plugin, goal, cfg, environment);
@@ -107,14 +124,14 @@ public abstract class AbstractUIMojo extends AbstractMojo {
 
   private MojoExecutor.Element createNodeConfiguration() {
     return element("nodeConfiguration",
-      element("version", "12.16.1")
+      element("version", getProperty("nodejs.version", "12.16.1"))
     );
   }
 
   private MojoExecutor.Element createPackageManagerConfiguration() {
     return element("packageManagerConfiguration",
       element("type", "YARN"),
-      element("version", "1.22.0")
+      element("version", getProperty("yarn.version", "1.22.0"))
     );
   }
 
