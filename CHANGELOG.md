@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Goal to copy plugin.xml and force recompile if necessary
+- Goal to validate common pitfalls
+- Goal to fix common pitfalls
+
+### Removed
+- Goal to fix package.json version
 
 ## 1.0.0-rc6 - 2020-04-14
 ### Added
