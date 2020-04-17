@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Goal to copy plugin.xml and force recompile if necessary
 
+### Changed
+- Resolve versions for buildfrontend maven plugin, nodejs and yarn from plugin pom ([#5](https://github.com/scm-manager/smp-maven-plugin/pull/5))
+
 ## 1.0.0-rc6 - 2020-04-14
 ### Added
 - Goal to write release descriptor
