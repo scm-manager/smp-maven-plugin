@@ -18,7 +18,7 @@ public class UiPluginsVersionRule extends PackageJsonRule {
         if (mavenVersion.equals(uiPluginsVersion)) {
           return Result.ok("parent pom version is equal with @scm-manager/ui-plugins");
         } else if (mavenVersion.endsWith("SNAPSHOT")) {
-          return Result.ok("parent pom uses snapshot");
+          return Result.ok("parent pom uses snapshot, no need to match @scm-manager/ui-plugins");
         } else {
           return Result.warn("@scm-manager/ui-plugins is not equal with parent pom")
             .withFix(() -> dependencies.put("@scm-manager/ui-plugins", mavenVersion))

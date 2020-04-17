@@ -39,6 +39,9 @@ https://bitbucket.org/sdorra/smp-maven-plugin
       </implementation>
       <configuration>
         <phases>
+          <validate>
+            sonia.scm.maven:smp-maven-plugin:validate
+          </validate>
           <process-resources>
             sonia.scm.maven:smp-maven-plugin:copy-plugin-xml,
             org.apache.maven.plugins:maven-resources-plugin:resources,

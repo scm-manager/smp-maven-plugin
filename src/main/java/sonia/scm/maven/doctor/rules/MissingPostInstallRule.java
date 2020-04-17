@@ -29,7 +29,7 @@ public class MissingPostInstallRule extends PackageJsonRule {
         if (scriptNode == null) {
           scriptNode = packageJson.with(FIELD_SCRIPTS);
         }
-        scriptNode.put(FIELD_POSTINSTALL, "SCRIPT_POSTINSTALL");
+        scriptNode.put(FIELD_POSTINSTALL, SCRIPT_POSTINSTALL);
       }).build();
   }
 }
