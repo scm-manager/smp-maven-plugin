@@ -34,10 +34,10 @@ public abstract class AbstractDoctorMojo extends AbstractMojo {
     }
 
     Results results = rules.validate(context);
-    execute(results);
+    execute(context, results);
   }
 
-  protected abstract void execute(Results results) throws MojoExecutionException;
+  protected abstract void execute(Context context, Results results) throws MojoExecutionException;
 
   protected void log(Result.Type type, String message) {
     if (type == Result.Type.OK) {

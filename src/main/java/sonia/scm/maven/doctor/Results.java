@@ -2,6 +2,7 @@ package sonia.scm.maven.doctor;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class Results implements Iterable<Result> {
   private final List<Result> resultList;
@@ -13,6 +14,10 @@ public class Results implements Iterable<Result> {
   public boolean hasError() {
     return resultList.stream()
       .anyMatch(result -> result.getType() == Result.Type.ERROR);
+  }
+
+  public Stream<Result> stream() {
+    return resultList.stream();
   }
 
   @Override

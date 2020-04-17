@@ -8,7 +8,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 public class ValidateMojo extends AbstractDoctorMojo {
 
   @Override
-  protected void execute(Results results) throws MojoExecutionException {
+  protected void execute(Context context, Results results) throws MojoExecutionException {
     results.forEach(this::log);
     if (results.hasError()) {
       throw new MojoExecutionException("one of the validation rules has failed with error");
