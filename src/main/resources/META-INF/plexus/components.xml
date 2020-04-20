@@ -39,6 +39,9 @@ https://bitbucket.org/sdorra/smp-maven-plugin
       </implementation>
       <configuration>
         <phases>
+          <validate>
+            sonia.scm.maven:smp-maven-plugin:validate
+          </validate>
           <process-resources>
             sonia.scm.maven:smp-maven-plugin:copy-plugin-xml,
             org.apache.maven.plugins:maven-resources-plugin:resources,
@@ -85,6 +88,7 @@ https://bitbucket.org/sdorra/smp-maven-plugin
       <configuration>
         <id>serve</id>
         <phases>
+          <phase>smp-validate</phase>
           <phase>smp-process-resources</phase>
           <phase>smp-compile</phase>
           <phase>smp-prepare-directory</phase>
@@ -92,6 +96,9 @@ https://bitbucket.org/sdorra/smp-maven-plugin
           <phase>run</phase>
         </phases>
         <default-phases>
+          <smp-validate>
+            sonia.scm.maven:smp-maven-plugin:validate
+          </smp-validate>
           <smp-process-resources>
             sonia.scm.maven:smp-maven-plugin:copy-plugin-xml,
             org.apache.maven.plugins:maven-resources-plugin:resources,
