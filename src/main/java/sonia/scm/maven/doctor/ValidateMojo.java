@@ -13,6 +13,9 @@ public class ValidateMojo extends AbstractDoctorMojo {
     if (results.hasError()) {
       throw new MojoExecutionException("one of the validation rules has failed with error");
     }
+    if (results.stream().anyMatch(Result::isFixable)) {
+      getLog().info("run 'mvn smp:fix' to fix the named problems");
+    }
   }
 
   private void log(Result result) {
