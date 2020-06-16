@@ -68,7 +68,7 @@ class WriteReleaseDescriptorMojoTest {
       "  minVersion: \"2.2.0\"",
       "  os: \"Linux\"",
       "  arch: \"arm\"",
-      "url: \"https://maven.scm-manager.org/nexus/content/repositories/plugin-releases/sonia/scm/plugins/scm-review-plugin/2.1.0/scm-review-plugin-2.1.0.smp\""
+      "url: \"https://packages.scm-manager.org/repository/plugin-releases/sonia/scm/plugins/scm-review-plugin/2.1.0/scm-review-plugin-2.1.0.smp\""
     );
     assertThat(resultContent.stream())
       .anyMatch(s -> s.matches("date: \".*\""));
