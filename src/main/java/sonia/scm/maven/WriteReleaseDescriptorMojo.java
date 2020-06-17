@@ -89,7 +89,7 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
 
   String createDownloadUrl() {
     String groupIdPath = project.getGroupId().replaceAll("\\.", "/");
-    return "https://maven.scm-manager.org/nexus/content/repositories/plugin-releases/" + groupIdPath + "/" + project.getArtifactId() + "/" + project.getVersion() + "/" + project.getArtifactId() + "-" + project.getVersion() + ".smp";
+    return "https://packages.scm-manager.org/repository/plugin-releases/" + groupIdPath + "/" + project.getArtifactId() + "/" + project.getVersion() + "/" + project.getArtifactId() + "-" + project.getVersion() + ".smp";
   }
 
   void setProject(MavenProject project) {
