@@ -5,10 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 1.1.0 - 2020-07-20
+### Added
+- Add optional dependencies to release.yml
+
+## 1.0.0 - 2020-06-17
 ### Changed
 - Migrate to new packages.scm-manager.org nexus ([#6](https://github.com/scm-manager/smp-maven-plugin/pull/6))
 
+## 1.0.0-rc7 - 2020-04-20
 ### Added
 - Goal to copy plugin.xml and force recompile if necessary ([#3](https://github.com/scm-manager/smp-maven-plugin/pull/3))
 - Goal to validate common pitfalls ([#4](https://github.com/scm-manager/smp-maven-plugin/pull/4))

@@ -66,6 +66,9 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
     if (plugin.dependencies != null && !plugin.dependencies.isEmpty()) {
       releaseDescriptor.dependencies.addAll(plugin.dependencies);
     }
+    if (plugin.optionalDependencies != null && !plugin.optionalDependencies.isEmpty()) {
+      releaseDescriptor.optionalDependencies.addAll(plugin.optionalDependencies);
+    }
     return releaseDescriptor;
   }
 
@@ -117,6 +120,7 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
     String url;
     String checksum;
     Collection<String> dependencies = new ArrayList<>();
+    Collection<String> optionalDependencies = new ArrayList<>();
     PluginConditions conditions;
   }
 
@@ -131,6 +135,10 @@ public class WriteReleaseDescriptorMojo extends AbstractDescriptorMojo {
     @XmlElementWrapper(name="dependencies")
     @XmlElement(name = "dependency")
     private List<String> dependencies;
+
+    @XmlElementWrapper(name="optional-dependencies")
+    @XmlElement(name = "dependency")
+    private List<String> optionalDependencies;
   }
 
   @XmlRootElement(name = "information")
