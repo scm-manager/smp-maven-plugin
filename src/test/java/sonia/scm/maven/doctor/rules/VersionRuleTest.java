@@ -34,7 +34,7 @@ class VersionRuleTest extends RuleTestBase {
     packageJson.put("version", "1.0.0");
 
     Result result = new VersionRule().validate(context);
-    assertThat(result.getType()).isEqualTo(Result.Type.WARN);
+    assertThat(result.getType()).isEqualTo(Result.Type.ERROR);
     assertThat(result.isFixable()).isTrue();
   }
 

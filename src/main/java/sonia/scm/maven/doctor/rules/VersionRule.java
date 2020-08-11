@@ -19,7 +19,7 @@ public class VersionRule extends PackageJsonRule {
     if (mavenVersion.equals(jsVersion)) {
       return Result.ok("version of pom.xml and package.json are equal");
     } else {
-      return Result.warn("version of pom.xml and package.json are not equal")
+      return Result.error("version of pom.xml and package.json are not equal")
         .withFix(() -> packageJson.put(FIELD_VERSION, mavenVersion))
         .build();
     }
