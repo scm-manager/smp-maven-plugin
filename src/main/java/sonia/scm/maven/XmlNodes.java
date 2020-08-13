@@ -20,27 +20,27 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 
-class XmlNodes {
+public class XmlNodes {
 
   private XmlNodes() {
   }
 
-  static boolean hasChild(Node parent, String name) {
+  public static boolean hasChild(Node parent, String name) {
     return getChild(parent, name) != null;
   }
 
-  static Node getChild(Document document, String name) {
+  public static Node getChild(Document document, String name) {
     return getChild(document.getDocumentElement(), name);
   }
 
-  static void removeNode(Node parent, String name) {
+  public static void removeNode(Node parent, String name) {
     Node child = getChild(parent, name);
     if (child != null) {
       parent.removeChild(child);
     }
   }
 
-  static Node getChild(Node parent, String name) {
+  public static Node getChild(Node parent, String name) {
     NodeList children = parent.getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
       Node child = children.item(i);
@@ -52,13 +52,13 @@ class XmlNodes {
     return null;
   }
 
-  static void appendIfNotExists(Document document, Node informationNode, String name, String artifactId) {
+  public static void appendIfNotExists(Document document, Node informationNode, String name, String artifactId) {
     if (!hasChild(informationNode, name)) {
       appendNode(document, informationNode, name, artifactId);
     }
   }
 
-  static void writeDocument(File descriptor, Document document)
+  public static void writeDocument(File descriptor, Document document)
     throws MojoExecutionException {
     try {
       Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -71,7 +71,7 @@ class XmlNodes {
     }
   }
 
-  static void appendNode(Document document, Node parent, String name, String value) {
+  public static void appendNode(Document document, Node parent, String name, String value) {
     if (value != null) {
       Element node = document.createElement(name);
 
@@ -80,7 +80,7 @@ class XmlNodes {
     }
   }
 
-  static Document createDocument(byte[] bytes) throws MojoExecutionException {
+  public static Document createDocument(byte[] bytes) throws MojoExecutionException {
     try (ByteArrayInputStream input = new ByteArrayInputStream(bytes)) {
       return documentBuilder().parse(input);
     } catch (IOException | SAXException ex) {
@@ -88,7 +88,7 @@ class XmlNodes {
     }
   }
 
-  static Document createDocument(File descriptor) throws MojoExecutionException {
+  public static Document createDocument(File descriptor) throws MojoExecutionException {
     try {
       return documentBuilder().parse(descriptor);
     } catch (IOException | SAXException ex) {

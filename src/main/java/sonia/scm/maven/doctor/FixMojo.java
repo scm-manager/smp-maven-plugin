@@ -3,12 +3,13 @@ package sonia.scm.maven.doctor;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Mojo(name = "fix")
+@Mojo(name = "fix", requiresDependencyResolution = ResolutionScope.RUNTIME)
 public class FixMojo extends AbstractDoctorMojo {
 
   @Override

@@ -46,11 +46,11 @@ public class SmpArtifact implements ArtifactItem {
 
   public static final String TYPE = "smp";
 
-  private String pluginName;
   private String groupId;
   private String artifactId;
   private String version;
   private boolean optional;
+  private PluginDescriptor descriptor;
 
   @Override
   public String getType() {

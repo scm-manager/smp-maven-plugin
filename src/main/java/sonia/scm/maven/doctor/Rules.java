@@ -1,6 +1,7 @@
 package sonia.scm.maven.doctor;
 
 import com.google.common.collect.ImmutableList;
+import sonia.scm.maven.doctor.rules.MinCoreVersionRule;
 import sonia.scm.maven.doctor.rules.MissingPostInstallRule;
 import sonia.scm.maven.doctor.rules.NameRule;
 import sonia.scm.maven.doctor.rules.UiPluginsVersionRule;
@@ -31,7 +32,8 @@ public final class Rules implements Iterable<Rule> {
       new NameRule(),
       new VersionRule(),
       new MissingPostInstallRule(),
-      new UiPluginsVersionRule()
+      new UiPluginsVersionRule(),
+      new MinCoreVersionRule()
     ));
   }
 
