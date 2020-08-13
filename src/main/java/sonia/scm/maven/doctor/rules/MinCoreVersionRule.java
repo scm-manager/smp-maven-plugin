@@ -26,7 +26,7 @@ public class MinCoreVersionRule implements Rule {
   @VisibleForTesting
   static final String NO_PLUGIN = "no min version for plugin defined";
   @VisibleForTesting
-  static final String NO_DEPENDENCY = "no min version for plugin defined";
+  static final String NO_DEPENDENCY = "no plugin dependencies found";
   @VisibleForTesting
   static final String ERROR_PLUGIN = "failed to find min version of plugin";
   @VisibleForTesting
