@@ -43,8 +43,6 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import sonia.scm.maven.lr.LiveReloadDirectoryListener;
 
 import java.awt.*;
@@ -210,23 +208,15 @@ public class RunMojo extends AbstractPackagingMojo {
     runScmServer(pathResolver, warFile);
   }
 
-  private SmpArtifact createSmpArtifact(File descriptor) throws MojoExecutionException {
-    if (descriptor.exists() && descriptor.isFile()) {
-      Document document = XmlNodes.createDocument(descriptor);
-      Node information = XmlNodes.getChild(document, "information");
-      if (information == null) {
-        throw new MojoExecutionException("could not find information node");
-      }
-      Node name = XmlNodes.getChild(information, "name");
-      if (name == null) {
-        throw new MojoExecutionException("could not find name node");
-      }
+  private SmpArtifact createSmpArtifact(File descriptorFile) throws MojoExecutionException {
+    if (descriptorFile.exists() && descriptorFile.isFile()) {
+      PluginDescriptor descriptor = PluginDescriptor.from(descriptorFile);
       return new SmpArtifact(
-        name.getTextContent(),
         project.getGroupId(),
         project.getArtifactId(),
         project.getVersion(),
-        false
+        false,
+        descriptor
       );
     } else {
       throw new MojoExecutionException("could not find descriptor");
@@ -240,8 +230,8 @@ public class RunMojo extends AbstractPackagingMojo {
     linker.link();
   }
 
-  private String createPluginPath(SmpArtifact artifact) {
-    return artifact.getPluginName();
+  private String createPluginPath(SmpArtifact artifact) throws MojoExecutionException {
+    return artifact.getDescriptor().findName();
   }
 
   private void extractSmp(File directory, File archive) throws MojoExecutionException {
@@ -262,12 +252,13 @@ public class RunMojo extends AbstractPackagingMojo {
   private void install(File pluginDirectory, SmpArtifact smp) throws MojoExecutionException {
     File directory = new File(pluginDirectory, createPluginPath(smp));
 
+    String pluginName = smp.getDescriptor().findName();
     if (!directory.exists()) {
-      logger.info("install smp dependency {}", smp.getPluginName());
+      logger.info("install smp dependency {}", pluginName);
       File archive = checkAndResolve(convertToArtifact(smp));
       extractSmp(directory, archive);
     } else {
-      logger.info("smp dependency {}, is already installed", smp.getPluginName());
+      logger.info("smp dependency {}, is already installed", pluginName);
     }
   }
 

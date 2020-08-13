@@ -118,16 +118,16 @@ public class AppendDependenciesMojo extends AbstractDescriptorMojo
     Element optionalDependenciesEl = doc.createElement(ELEMENT_OPTIONAL_DEPENDENCIES);
     root.appendChild(optionalDependenciesEl);
 
-    dependencies.forEach(smp -> {
+    for (SmpArtifact smp : dependencies) {
       Element dependencyEl = doc.createElement(ELEMENT_DEPENDENCY);
-      dependencyEl.setTextContent(smp.getPluginName());
+      dependencyEl.setTextContent(smp.getDescriptor().findName());
       dependencyEl.setAttribute(ATTRIBUTE_VERSION, smp.getVersion());
       if (smp.isOptional()) {
         optionalDependenciesEl.appendChild(dependencyEl);
       } else {
         dependenciesEl.appendChild(dependencyEl);
       }
-    });
+    }
 
     XmlNodes.writeDocument(descriptor, doc);
   }

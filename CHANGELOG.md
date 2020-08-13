@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Validation rule for min core version ([#8](https://github.com/scm-manager/smp-maven-plugin/pull/8))
 ### Changed
 - Throw error on mismatching versions instead of warning ([#7](https://github.com/scm-manager/smp-maven-plugin/pull/7))
 

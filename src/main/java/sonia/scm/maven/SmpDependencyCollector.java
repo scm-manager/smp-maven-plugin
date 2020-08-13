@@ -38,16 +38,9 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
 import org.zeroturnaround.zip.ZipUtil;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -55,7 +48,6 @@ import java.util.stream.Collectors;
 //~--- JDK imports ------------------------------------------------------------
 
 /**
- *
  * @author Sebastian Sdorra
  */
 public final class SmpDependencyCollector {
@@ -63,8 +55,6 @@ public final class SmpDependencyCollector {
   private static final Logger LOG = LoggerFactory.getLogger(SmpDependencyCollector.class);
 
   private static final String PLUGIN_DESCRIPTOR = "META-INF/scm/plugin.xml";
-  private static final String ELEMENT_NAME = "name";
-  private static final String ELEMENT_INFORMATION = "information";
   private final MavenProject project;
 
   private SmpDependencyCollector(MavenProject project) {
@@ -98,37 +88,32 @@ public final class SmpDependencyCollector {
   private Set<SmpArtifact> filterAndMapSmpArtifacts(Set<Artifact> artifacts) throws MojoExecutionException {
     Set<SmpArtifact> smps = new HashSet<>();
     for (Artifact artifact : artifacts) {
-      File file = artifact.getFile();
-      String name = getNameFromDescriptor(file);
-      if (name != null) {
-        LOG.debug("found smp dependency {}", name);
-        smps.add(new SmpArtifact(
-          name,
-          artifact.getGroupId(),
-          artifact.getArtifactId(),
-          artifact.getVersion(),
-          artifact.isOptional())
-        );
+
+      PluginDescriptor descriptor = findDescriptor(artifact);
+      if (descriptor != null) {
+        LOG.debug("found smp dependency {}:{}:{}", artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
+        smps.add(create(artifact, descriptor));
       }
     }
     return smps;
   }
 
-  private String getNameFromDescriptor(File file) throws MojoExecutionException {
-    try {
-      byte[] bytes = ZipUtil.unpackEntry(file, PLUGIN_DESCRIPTOR);
-      if (bytes != null) {
-        Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(bytes));
-        Node information = XmlNodes.getChild(document.getDocumentElement(), ELEMENT_INFORMATION);
-        if (information != null) {
-          Node name = XmlNodes.getChild(information, ELEMENT_NAME);
-          if (name != null) {
-            return name.getTextContent();
-          }
-        }
-      }
-    } catch (SAXException | ParserConfigurationException | IOException e) {
-      throw new MojoExecutionException("failed to extract and parse descriptor from " + file, e);
+  private SmpArtifact create(Artifact artifact, PluginDescriptor descriptor) {
+    return new SmpArtifact(
+      artifact.getGroupId(),
+      artifact.getArtifactId(),
+      artifact.getVersion(),
+      artifact.isOptional(),
+      descriptor
+    );
+  }
+
+
+  private PluginDescriptor findDescriptor(Artifact artifact) throws MojoExecutionException {
+    File file = artifact.getFile();
+    byte[] bytes = ZipUtil.unpackEntry(file, PLUGIN_DESCRIPTOR);
+    if (bytes != null) {
+      return PluginDescriptor.from(bytes);
     }
     return null;
   }
