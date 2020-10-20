@@ -76,7 +76,8 @@ https://bitbucket.org/sdorra/smp-maven-plugin
             org.apache.maven.plugins:maven-install-plugin:install
           </install>
           <deploy>
-            org.apache.maven.plugins:maven-deploy-plugin:deploy
+            org.apache.maven.plugins:maven-deploy-plugin:deploy,
+            sonia.scm.maven:smp-maven-plugin:deploy-ui
           </deploy>
         </phases>
       </configuration>

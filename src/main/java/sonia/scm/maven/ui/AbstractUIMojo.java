@@ -25,14 +25,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.Element;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.element;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
 
 public abstract class AbstractUIMojo extends AbstractMojo {
 
   private static final Logger LOG = LoggerFactory.getLogger(AbstractUIMojo.class);
 
   @Parameter(readonly = true, required = true, defaultValue = "${project}")
-  private MavenProject project;
+  protected MavenProject project;
 
   @Parameter(readonly = true, required = true, defaultValue = "${session}")
   private MavenSession session;
@@ -92,7 +95,7 @@ public abstract class AbstractUIMojo extends AbstractMojo {
     return project.getProperties().getProperty(key, defaultValue);
   }
 
-  protected void execute(String goal, MojoExecutor.Element ...configuration) throws MojoExecutionException {
+  protected void execute(String goal, MojoExecutor.Element... configuration) throws MojoExecutionException {
     MojoExecutor.ExecutionEnvironment environment = executionEnvironment(project, session, pluginManager);
 
     Plugin plugin = findOrCreatePlugin();
@@ -101,6 +104,9 @@ public abstract class AbstractUIMojo extends AbstractMojo {
     elements.add(createNodeConfiguration());
     elements.add(createPackageManagerConfiguration());
     elements.add(createFailOnMissingPackageJsonConfiguration());
+    for (Element element : createExtraConfiguration()) {
+      elements.add(element);
+    }
     Collections.addAll(elements, configuration);
 
     Xpp3Dom cfg = configuration(elements.toArray(new MojoExecutor.Element[0]));
@@ -126,6 +132,10 @@ public abstract class AbstractUIMojo extends AbstractMojo {
     return element("nodeConfiguration",
       element("version", getProperty("nodejs.version", "12.16.1"))
     );
+  }
+
+  protected Iterable<MojoExecutor.Element> createExtraConfiguration() {
+    return Collections.emptySet();
   }
 
   private MojoExecutor.Element createPackageManagerConfiguration() {
