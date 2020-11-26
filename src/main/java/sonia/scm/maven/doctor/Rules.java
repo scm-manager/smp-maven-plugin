@@ -5,6 +5,7 @@ import sonia.scm.maven.doctor.rules.MinCoreVersionRule;
 import sonia.scm.maven.doctor.rules.MissingPostInstallRule;
 import sonia.scm.maven.doctor.rules.NameRule;
 import sonia.scm.maven.doctor.rules.UiPluginsVersionRule;
+import sonia.scm.maven.doctor.rules.ValidPluginsJsonRule;
 import sonia.scm.maven.doctor.rules.VersionRule;
 
 import java.util.Iterator;
@@ -33,7 +34,8 @@ public final class Rules implements Iterable<Rule> {
       new VersionRule(),
       new MissingPostInstallRule(),
       new UiPluginsVersionRule(),
-      new MinCoreVersionRule()
+      new MinCoreVersionRule(),
+      new ValidPluginsJsonRule()
     ));
   }
 
